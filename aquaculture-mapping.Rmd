@@ -1,0 +1,75 @@
+---
+title: "aquaculture_mapping"
+author: "Robert Saldivar"
+date: "4/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading Packages
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(tmap)
+library(tmaptools)
+library(ggmap)
+library(sf)
+library(sp)
+library(leaflet)
+```
+
+```{r}
+#Reading in data
+
+data_goals <- read_csv("data_goals.csv")
+data_end_users <- read_csv("data_end_users.csv")
+scores_clean <- read_csv("scores_clean.csv")
+
+```
+
+```{r}
+#Cleaning and wrangling the data
+
+data_scores <- full_join(data_goals, scores_clean)
+
+
+estuary_sf <- data_scores %>%
+  drop_na("Long") %>%
+  st_as_sf(coords = c("Long", "Lat"), crs = 4326) %>%
+  clean_names()
+
+```
+
+```{r}
+#Making an interactive map with tmap
+
+snapp_estuary_map <- tm_shape(estuary_sf) +
+  tm_dots(labels = "estuary_or_subbasin", col = "green", size = 0.1)
+
+basemap <- tm_basemap("Esri.WorldImagery")
+
+tmap_mode("view")
+snapp_estuary_map +
+  basemap
+
+
+```
+
+
+
+
+```{r}
+# Making maps with Shapefiles
+
+pacific_estuary <- read_sf(dsn = here("locations"), layer = "Pacific_estuary_shore_dist")
+
+
+pacific_estuary_plot <- ggplot(pacific_estuary) +
+  geom_sf()
+
+pacific_estuary_plot
