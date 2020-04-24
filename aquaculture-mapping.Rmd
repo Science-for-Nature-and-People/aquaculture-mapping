@@ -36,6 +36,7 @@ scores_clean <- read_csv("scores_clean.csv")
 ca_counties <- read_sf(dsn = here("locations"), layer = "CA_counties")
 or_counties <- read_sf(dsn = here("locations"), layer = "OR_counties")
 wa_counties <- read_sf(dsn = here("locations"), layer = "WA_counties")
+nv_counties <- read_sf(dsn = here("locations"), layer = "NV_counties")
 
 ```
 
@@ -74,6 +75,7 @@ ggplot() +
   geom_sf(data = ca_counties) +
   geom_sf(data = or_counties) +
   geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
   geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = ecological)) +
   coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
@@ -81,7 +83,9 @@ ggplot() +
     "green",
     "blue"
   )) +
-  theme_minimal()
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Ecology Score")
 
 # I think it might look better if instead of counties they were just an outline of the state.
 
@@ -94,6 +98,7 @@ ggplot() +
   geom_sf(data = ca_counties) +
   geom_sf(data = or_counties) +
   geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
   geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = harvest)) +
   coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
@@ -101,17 +106,84 @@ ggplot() +
     "green",
     "blue"
   )) +
-  theme_minimal()
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Harvest Score")
 
 ```
 
 ```{r}
-#This is going to be a static map of estuary locations with color based on the coastwide_planner score
+#This is going to be a static map of estuary locations with color based on the community engagement restoration score
 
 ggplot() +
   geom_sf(data = ca_counties) +
   geom_sf(data = or_counties) +
   geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = community_engagement_restotation)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Community Engagement Restoration Score")
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the community engagment harvest score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = community_engagement_harvest)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Community Engagement Harvest Score")
+
+```
+
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the coastwide conservation score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = coastwide_conservation)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Coastwide Conservation Score")
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the coastwide planner score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
   geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = coastwide_planner)) +
   coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
@@ -119,7 +191,9 @@ ggplot() +
     "green",
     "blue"
   )) +
-  theme_minimal()
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Coastwide Planner Score")
 
 ```
 
@@ -130,6 +204,7 @@ ggplot() +
   geom_sf(data = ca_counties) +
   geom_sf(data = or_counties) +
   geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
   geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = restoration_practitioner)) +
   coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
@@ -137,7 +212,52 @@ ggplot() +
     "green",
     "blue"
   )) +
-  theme_minimal()
+  theme_minimal()+
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Restoration Practictioner Score")
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the community groups restoration score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = community_groups_restoration)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118)) +
+  ggtitle("Community Groups Restoration Score")
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the community groups harvest score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = nv_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = community_groups_harvest)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(-124, -121, -118))+
+  ggtitle("Community Groups Harvest Score")
+
 
 ```
 
@@ -157,6 +277,7 @@ pacific_estuary_plot <- ggplot() +
   #geom_sf(data = ca_counties) +
   #geom_sf(data = wa_counties) +
   #geom_sf(data = or_counties) +
+  #geom_sf(data = nv_counties) +
   geom_sf(data = pacific_estuary, aes(fill = shore_dist)) +
   scale_fill_gradientn(colors = c(
     "red",
