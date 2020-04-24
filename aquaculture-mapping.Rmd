@@ -68,14 +68,14 @@ snapp_estuary_map +
 ```
 
 ```{r}
-#This is going to be a static map of estuary locations
+#This is going to be a static map of estuary locations with color based on the ecology score
 
 ggplot() +
-  #geom_sf(data = ca_counties) +
-  #geom_sf(data = or_counties) +
-  #geom_sf(data = wa_counties) +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
   geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = ecological)) +
-  coord_sf(xlim = c(-125, -115), ylim = c(30, 50)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
     "red",
     "green",
@@ -87,6 +87,59 @@ ggplot() +
 
 ```
 
+```{r}
+#This is going to be a static map of estuary locations with color based on the harvest score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = harvest)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal()
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the coastwide_planner score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = coastwide_planner)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal()
+
+```
+
+```{r}
+#This is going to be a static map of estuary locations with color based on the restoration_practitioner score
+
+ggplot() +
+  geom_sf(data = ca_counties) +
+  geom_sf(data = or_counties) +
+  geom_sf(data = wa_counties) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = restoration_practitioner)) +
+  coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+  scale_color_gradientn(colors = c(
+    "red",
+    "green",
+    "blue"
+  )) +
+  theme_minimal()
+
+```
 
 
 ```{r}
@@ -119,8 +172,4 @@ pacific_estuary_plot
 
 ```
 
-
-```{r}
-#This is going to be an experiment to see if I can get
-```
 
