@@ -23,6 +23,9 @@ library(sp)
 library(leaflet)
 library(rgdal)
 library(rgeos)
+library(gridExtra)
+library(cowplot)
+library(ggpubr)
 ```
 
 ```{r, message = FALSE}
@@ -96,12 +99,12 @@ snapp_estuary_map +
 ```{r}
 #This is going to be a static map of estuary locations with color based on the ecology score
 
-ggplot() +
+ecology_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
   geom_sf(data = nv) +
-  geom_sf(data = estuary_sf, crs = 4326, size = 4, aes(color = ecological)) +
+  geom_sf(data = estuary_sf, crs = 4326, size = 3, aes(color = ecological)) +
   coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
   scale_color_gradientn(colors = c(
     "red",
@@ -113,12 +116,14 @@ ggplot() +
   ggtitle("Ecology Score")
 
 
+ecology_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the harvest score
 
-ggplot() +
+harvest_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -134,12 +139,14 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Harvest Score")
 
+harvest_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the community engagement restoration score
 
-ggplot() +
+community_restoration_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -155,12 +162,14 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Community Engagement Restoration Score")
 
+community_restoration_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the community engagment harvest score
 
-ggplot() +
+community_harvest_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -176,13 +185,15 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Community Engagement Harvest Score")
 
+community_harvest_score
+
 ```
 
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the coastwide conservation score
 
-ggplot() +
+coastwide_conservation_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -198,12 +209,14 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Coastwide Conservation Score")
 
+coastwide_conservation_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the coastwide planner score
 
-ggplot() +
+coastwide_planner_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -219,12 +232,14 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Coastwide Planner Score")
 
+coastwide_planner_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the restoration_practitioner score
 
-ggplot() +
+restoration_planner_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -240,12 +255,14 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Restoration Practictioner Score")
 
+restoration_planner_score
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the community groups restoration score
 
-ggplot() +
+community_groups_restoration_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -261,12 +278,15 @@ ggplot() +
   scale_x_continuous(breaks = c(-124, -121, -118)) +
   ggtitle("Community Groups Restoration Score")
 
+community_groups_restoration_score 
+
+
 ```
 
 ```{r}
 #This is going to be a static map of estuary locations with color based on the community groups harvest score
 
-ggplot() +
+community_groups_harvest_score <- ggplot() +
   geom_sf(data = ca) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
@@ -281,6 +301,24 @@ ggplot() +
   theme_minimal() +
   scale_x_continuous(breaks = c(-124, -121, -118))+
   ggtitle("Community Groups Harvest Score")
+
+community_groups_harvest_score
+
+```
+
+
+```{r}
+# This code chunk is intended to try to make all of static point maps into one figure.
+
+
+
+ggarrange(ecology_score, harvest_score, community_restoration_score, community_harvest_score, community_harvest_score, coastwide_conservation_score, ncol = 3, nrow = 2)
+
+#The above figure needs to be cleaned up some more. all of the maps are getting misalighned
+
+ggarrange(coastwide_planner_score, community_groups_restoration_score, restoration_planner_score,  community_groups_harvest_score, rremove("x.text"),  ncol = 2, nrow = 2, widths = c(1,1), heights = c(1,1))
+
+#for all graphs it would probably be best to remove x-axis labels, titles and legends or clean them up so that they look better in the figure.
 
 
 ```
