@@ -312,7 +312,7 @@ community_groups_harvest_score
 
 
 
-ggarrange(ecology_score, harvest_score, community_restoration_score, community_harvest_score, community_harvest_score, coastwide_conservation_score, ncol = 3, nrow = 2)
+ggarrange(ecology_score, community_harvest_score, harvest_score, community_restoration_score, community_harvest_score, ncol = 2, nrow = 3, widths = c(1,1), heights = c(1,1))
 
 #The above figure needs to be cleaned up some more. all of the maps are getting misalighned
 
