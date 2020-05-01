@@ -100,6 +100,10 @@ snapp_estuary_map +
 
 ```
 
+**Interactive Map of Estuaries: Hovering the mouse over an estuary will show the estuary's name. Clicking on an estuary will show the  estuaries scores.**
+
+
+
 ```{r}
 #This is going to be a static map of estuary locations with color based on the ecology score
 
@@ -317,7 +321,7 @@ community_groups_harvest_score
 
 
 
-ggarrange(ecology_score, community_harvest_score, harvest_score, community_restoration_score, community_harvest_score, ncol = 2, nrow = 3, widths = c(1,1), heights = c(1,1))
+ggarrange(ecology_score, community_harvest_score, harvest_score, coastwide_conservation_score, community_restoration_score, ncol = 2, nrow = 3, widths = c(1,1), heights = c(1,1))
 
 #The above figure needs to be cleaned up some more. all of the maps are getting misalighned
 
@@ -328,9 +332,10 @@ ggarrange(coastwide_planner_score, community_groups_restoration_score, restorati
 
 library(patchwork)
 
-g <- ecology_score + community_harvest_score + harvest_score + community_restoration_score + community_harvest_score
+g <- ecology_score + community_harvest_score + coastwide_conservation_score +  harvest_score + community_restoration_score
 
 ggsave("figures/map_patchwork.png", g, width = 12, height = 7, dpi = 150)
+
 
 ```
 
