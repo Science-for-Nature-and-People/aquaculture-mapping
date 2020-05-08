@@ -30,6 +30,7 @@ library(rgeos)
 library(gridExtra)
 library(cowplot)
 library(ggpubr)
+library(USAboundaries)
 ```
 
 ```{r, message = FALSE}
@@ -84,6 +85,17 @@ estuary_sf <- data_scores %>%
   clean_names()
 
 ```
+
+```{r}
+
+df <- estuary_sf %>%
+  gather(score_type, score, -estuary_or_subbasin, -geometry)
+
+# I have put all of the scores into a single column. This should help with the interactive map or if I make a shiny app of the map.
+
+```
+
+
 
 ```{r}
 #Making an interactive map with tmap
@@ -356,6 +368,7 @@ pacific_estuary_plot <- ggplot() +
   #geom_sf(data = wa) +
   #geom_sf(data = or) +
   #geom_sf(data = nv) +
+  geom_sf(data = us_boundaries())+
   geom_sf(data = pacific_estuary, aes(fill = shore_dist)) +
   scale_fill_gradientn(colors = c(
     "red",
@@ -363,7 +376,8 @@ pacific_estuary_plot <- ggplot() +
     "blue"
   )) +
   theme_minimal() +
-  scale_x_continuous(breaks = c(-124, -121, -118))  
+  scale_x_continuous(limits = c(-124, -118), breaks = c(-124, -121, -118))  +
+  scale_y_continuous(limits = c(30, 50), breaks = c(35, 40, 45))
 
 pacific_estuary_plot
 
