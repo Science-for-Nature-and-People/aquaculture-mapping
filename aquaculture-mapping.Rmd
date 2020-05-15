@@ -88,7 +88,7 @@ estuary_sf <- data_scores %>%
 
 ```{r}
 
-df <- estuary_sf %>%
+estuary_reactive <- estuary_sf %>%
   gather(score_type, score, -estuary_or_subbasin, -geometry)
 
 # I have put all of the scores into a single column. This should help with the interactive map or if I make a shiny app of the map.
