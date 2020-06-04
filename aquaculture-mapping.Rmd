@@ -76,22 +76,29 @@ nv <- nv_counties %>%
 ```{r, message=FALSE}
 #Cleaning and wrangling the data
 
-data_scores <- full_join(data_goals, scores_clean)
+data_scores <- full_join(data_goals, scores_clean) %>%
+  clean_names()
+
+
 
 
 estuary_sf <- data_scores %>%
-  drop_na("Long") %>%
-  st_as_sf(coords = c("Long", "Lat"), crs = 4326) %>%
+  drop_na("long") %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
   clean_names()
 
 ```
 
 ```{r}
 
-estuary_reactive <- estuary_sf %>%
+estuary_reactive_format <- estuary_sf %>%
   gather(score_type, score, -estuary_or_subbasin, -geometry)
 
 # I have put all of the scores into a single column. This should help with the interactive map or if I make a shiny app of the map.
+
+estuary_reactive_lat_lon <- data_scores %>%
+  drop_na("long") %>%
+  gather(score_type, score, -estuary_or_subbasin, - long, -lat)
 
 ```
 

@@ -9,15 +9,15 @@ library(shinythemes)
 library(tmap)
 library(leaflet)
 
-estuary_reactive
+estuary_reactive_lat_lon
 
 ui <- fluidPage(
   titlePanel("title"),
   sidebarLayout(
     sidebarPanel("Score Widget",
-                 radioButtons(inputId = "score",
-                              label = "Choose Score",
-                              choices = unique(estuary_reactive$score_type)
+                 radioButtons(inputId = "score_select",
+                              label = "Choose Score Type",
+                              choices = unique(estuary_reactive_format$score_type)
                               )
                  ),
     mainPanel("Output Map",
@@ -29,12 +29,15 @@ ui <- fluidPage(
 server <- function(inputs, outputs) {
   
 estuary_shiny <- reactive({
-  estuary_reactive %>%
-    filter(score_type %in% (input$score))
+  estuary_reactive_format %>%
+    filter(score_type  == input$score_select)
 })
 
 outputs$Score_Map <- renderPlot({
-  estuary_shiny()
+  tm_shape(estuary_shiny) +
+    tm_dots(labels = "estuary_or_subbasin", col = "score") +
+    tmap_mode("view")
+  
 })
   
 }
