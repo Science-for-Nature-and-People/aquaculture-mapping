@@ -435,7 +435,8 @@ SNAPP_estuary_ecology <- ggplot() +
   )) +
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -123, -116)) +
-  scale_y_continuous(breaks = c(30, 40, 50))
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_void()
 
 SNAPP_estuary_ecology
 ```
@@ -455,7 +456,8 @@ SNAPP_estuary_harvest <- ggplot() +
   )) +
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -123, -116)) +
-  scale_y_continuous(breaks = c(30, 40, 50))
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_classic()
 
 SNAPP_estuary_harvest
 ```
@@ -468,13 +470,13 @@ SNAPP_estuary_restoration <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Restor1)) +
   scale_fill_gradientn(colors = c(
-    "light blue",
-    "blue",
-    "dark blue"
+    "violet",
+    "purple"
   )) +
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -123, -116)) +
-  scale_y_continuous(breaks = c(30, 40, 50))
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme(panel.background = element_blank())
 
 SNAPP_estuary_restoration
 ```
@@ -488,13 +490,14 @@ SNAPP_estuary_community <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Comm1)) +
   scale_fill_gradientn(colors = c(
-    "light blue",
-    "blue",
-    "dark blue"
+    "white",
+    "grey",
+    "black"
   )) +
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -123, -116)) +
-  scale_y_continuous(breaks = c(30, 40, 50))
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  
 
 SNAPP_estuary_community
 ```
@@ -504,6 +507,8 @@ SNAPP_estuary_community
 #using patchwork to put maps together
 
 collective_estuary_maps <- SNAPP_estuary_ecology + SNAPP_estuary_harvest + SNAPP_estuary_restoration + SNAPP_estuary_community
+
+collective_estuary_maps
 ```
 
 
@@ -512,7 +517,7 @@ collective_estuary_maps <- SNAPP_estuary_ecology + SNAPP_estuary_harvest + SNAPP
 
 
 SNAPP_estuary_map_polygons <- tm_shape(SNAPP_estuary_polygons) +
-  tm_fill(label = Estuary_Na)
+  tm_fill()
   
 
 basemap <- tm_basemap("Esri.WorldImagery")
