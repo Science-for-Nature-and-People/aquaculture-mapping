@@ -490,13 +490,14 @@ SNAPP_estuary_community <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Comm1)) +
   scale_fill_gradientn(colors = c(
-    "white",
-    "grey",
-    "black"
+    "green",
+    "blue",
+    "purple"
   )) +
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -123, -116)) +
   scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
   
 
 SNAPP_estuary_community
@@ -520,7 +521,7 @@ SNAPP_estuary_map_polygons <- tm_shape(SNAPP_estuary_polygons) +
   tm_fill()
   
 
-basemap <- tm_basemap("Esri.WorldImagery")
+basemap <- tm_basemap("Esri.WorldStreetMap")
 
 tmap_mode("view")
 SNAPP_estuary_map_polygons +
