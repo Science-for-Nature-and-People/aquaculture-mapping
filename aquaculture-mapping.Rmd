@@ -426,10 +426,7 @@ st_crs(SNAPP_estuary_polygons)
 
 
 SNAPP_estuary_ecology <- ggplot() +
-  geom_sf(data = ca, crs = 4326) +
-  geom_sf(data = or, crs = 4326) +
-  geom_sf(data = wa, crs = 4326) +
-  geom_sf(data = nv, crs = 4326) +
+  geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Ecol1)) +
   scale_fill_gradientn(colors = c(
     "light blue",
@@ -449,10 +446,7 @@ SNAPP_estuary_ecology
 
 
 SNAPP_estuary_harvest <- ggplot() +
-  geom_sf(data = ca, crs = 4326) +
-  geom_sf(data = or, crs = 4326) +
-  geom_sf(data = wa, crs = 4326) +
-  geom_sf(data = nv, crs = 4326) +
+  geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Harvest1)) +
   scale_fill_gradientn(colors = c(
     "light green",
@@ -471,10 +465,7 @@ SNAPP_estuary_harvest
 
 
 SNAPP_estuary_restoration <- ggplot() +
-  geom_sf(data = ca, crs = 4326) +
-  geom_sf(data = or, crs = 4326) +
-  geom_sf(data = wa, crs = 4326) +
-  geom_sf(data = nv, crs = 4326) +
+  geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Restor1)) +
   scale_fill_gradientn(colors = c(
     "light blue",
@@ -494,10 +485,7 @@ SNAPP_estuary_restoration
 
 
 SNAPP_estuary_community <- ggplot() +
-  geom_sf(data = ca, crs = 4326) +
-  geom_sf(data = or, crs = 4326) +
-  geom_sf(data = wa, crs = 4326) +
-  geom_sf(data = nv, crs = 4326) +
+  geom_sf(data = us_boundaries()) +
   geom_sf(data = SNAPP_estuary_polygons, aes(fill = Comm1)) +
   scale_fill_gradientn(colors = c(
     "light blue",
