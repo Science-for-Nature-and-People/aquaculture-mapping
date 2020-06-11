@@ -46,6 +46,10 @@ or_counties <- read_sf(dsn = here("locations"), layer = "OR_counties")
 wa_counties <- read_sf(dsn = here("locations"), layer = "WA_counties")
 nv_counties <- read_sf(dsn = here("locations"), layer = "NV_counties")
 
+#Reading in shapefiles for Canada and Mexico
+canada <- read_sf(dsn = here("locations"), layer = "lpr_000b16_e")
+mexico <- read_sf(dsn = here("locations"), layer = "mexstates")
+
 ```
 
 ```{r}
@@ -410,7 +414,7 @@ The code below will be using the preliminary shapefiles provided by the project.
 #Making maps with shapefiles from project partners
 
 
-SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "NEAR_Final_SNAPP_Estuary_Polygons_060420")
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66")
 
 summary(SNAPP_estuary_polygons)
 
@@ -418,6 +422,8 @@ st_crs(SNAPP_estuary_polygons)
 
 #plot(SNAPP_estuary_polygons$OBJECTID)
 
+
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44")
 
 ```
 
