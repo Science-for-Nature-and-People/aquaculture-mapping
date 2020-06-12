@@ -31,7 +31,7 @@ library(gridExtra)
 library(cowplot)
 library(ggpubr)
 library(USAboundaries)
-library(plotmatrix)
+library(plotrix)
 ```
 
 ```{r, message = FALSE}
@@ -762,8 +762,9 @@ Zoom_high_ecology3_points
 
 
 ```{r}
-#trying to use plotmatrix to add bar graphs to the map
+#trying to use plotmatrix to add bar graphs to the map 
 
+# Here is a resource I have found for adding bar graphs to a map. https://gis.stackexchange.com/questions/219880/plotting-bar-charts-on-maps-in-r
 
 
 ```
