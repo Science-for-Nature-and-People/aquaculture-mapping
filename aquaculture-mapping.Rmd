@@ -669,7 +669,7 @@ high_ecology_restoration_map <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
   geom_sf(data = mexico) +
-  geom_sf(data = high_ecology_points, aes(color = Restor1), size = 4) +  
+  geom_sf(data = high_ecology_points, aes(color = Resto1), size = 4) +  
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -116)) +
   scale_y_continuous(breaks = c(30, 40, 50)) +
