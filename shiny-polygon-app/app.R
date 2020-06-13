@@ -1,5 +1,7 @@
 # Shiny app using the polygon data
 
+# This looks like a usefule resource for integrating shiny with leaflet: https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html#interactive-maps
+
 library(tidyverse)
 library(shiny)
 library(shinythemes)
