@@ -595,7 +595,12 @@ collective_estuary_maps_points <- SNAPP_estuary_ecology_points + SNAPP_estuary_h
 
 
 collective_estuary_maps_polygons
+
+ggsave("figures/final_map_patchwork_polygons.png", collective_estuary_maps_polygons, width = 12, height = 7, dpi = 150)
+
 collective_estuary_maps_points
+
+ggsave("figures/map_patchwork_points.png", collective_estuary_maps_points, width = 12, height = 7, dpi = 150)
 ```
 
 
@@ -660,7 +665,7 @@ high_ecology_restoration_map <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
   geom_sf(data = mexico) +
-  geom_sf(data = high_ecology_points, aes(color = Resto1), size = 4) +  
+  geom_sf(data = high_ecology_points, aes(color = Restor1), size = 4) +  
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -116)) +
   scale_y_continuous(breaks = c(30, 40, 50)) +
@@ -692,17 +697,13 @@ Zoom_high_ecology1 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
   geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
-  coord_sf(xlim = c(-125, -121), ylim = c(45, 49.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
   theme_bw()
 
 Zoom_high_ecology2 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
-  coord_sf(xlim = c(-124, -117), ylim = c(34, 38.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
   theme_bw()
 
 
@@ -710,9 +711,7 @@ Zoom_high_ecology3 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = mexico) +
   geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
-  coord_sf(xlim = c(-121, -116), ylim = c(30, 34.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
   theme_bw()
 
 
@@ -729,17 +728,13 @@ Zoom_high_ecology1_points <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
   geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
-  coord_sf(xlim = c(-125, -121), ylim = c(45, 49.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
   theme_bw()
 
 Zoom_high_ecology2_points <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
-  coord_sf(xlim = c(-124, -117), ylim = c(34, 38.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
   theme_bw()
 
 
@@ -748,8 +743,6 @@ Zoom_high_ecology3_points <- ggplot() +
   geom_sf(data = mexico) +
   geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
   coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
   theme_bw()
 
 
@@ -775,7 +768,7 @@ Zoom_high_ecology3_points
 
 
 SNAPP_estuary_map_polygons <- tm_shape(SNAPP_estuary_polygons) +
-  tm_fill()
+  tm_polygons(label = "Estuary_Na")
   
 
 basemap <- tm_basemap("Esri.WorldStreetMap")
@@ -784,3 +777,16 @@ tmap_mode("view")
 SNAPP_estuary_map_polygons +
   basemap
 ```
+
+
+```{r}
+SNAPP_estuary_map_points <- tm_shape(SNAPP_estuary_points) +
+  tm_dots(labels = "Name")
+
+tmap_mode("view")
+SNAPP_estuary_map_points +
+  basemap
+
+
+```
+
