@@ -34,12 +34,16 @@ library(USAboundaries)
 library(plotrix)
 ```
 
+
+*The new maps that have been created using the polygon data start on Line 416*
+
+
 ```{r, message = FALSE}
 #Reading in data
 
-data_goals <- read_csv("data_goals.csv")
-data_end_users <- read_csv("data_end_users.csv")
-scores_clean <- read_csv("scores_clean.csv")
+data_goals <- read_csv(here("data", "data_goals.csv"))
+data_end_users <- read_csv(here("data", "data_end_users.csv"))
+scores_clean <- read_csv(here("data", "scores_clean.csv"))
 
 #reading in county shape files for CA, OR, and WA these will be used for basemaps
 ca_counties <- read_sf(dsn = here("locations"), layer = "CA_counties")
@@ -648,7 +652,7 @@ ecology_comm_map
 high_ecology_polygons <- SNAPP_estuary_polygons %>%
   filter(Ecol1 > 0.5)
 
-high_ecology_points <- SNAPP_estuary_polygons %>%
+high_ecology_points <- SNAPP_estuary_points %>%
   filter(Ecol1 > 0.5)
 
 high_ecology_harvest_map <- ggplot() +
@@ -727,13 +731,13 @@ Zoom_high_ecology3
 Zoom_high_ecology1_points <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
-  geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
+  geom_sf(data = high_ecology_points, color = "red", size = 3) +  
   coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
   theme_bw()
 
 Zoom_high_ecology2_points <- ggplot() +
   geom_sf(data = us_boundaries()) +
-  geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
+  geom_sf(data = high_ecology_points, fill = "red", color = "red", size = 3) +  
   coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
   theme_bw()
 
@@ -741,7 +745,7 @@ Zoom_high_ecology2_points <- ggplot() +
 Zoom_high_ecology3_points <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = mexico) +
-  geom_sf(data = high_ecology_points, fill = "red", color = "red") +  
+  geom_sf(data = high_ecology_points, fill = "red", color = "red", size = 3) +  
   coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
   theme_bw()
 
@@ -771,21 +775,23 @@ SNAPP_estuary_map_polygons <- tm_shape(SNAPP_estuary_polygons) +
   tm_polygons(label = "Estuary_Na")
   
 
-basemap <- tm_basemap("Esri.WorldStreetMap")
+basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
 tmap_mode("view")
 SNAPP_estuary_map_polygons +
-  basemap
+  basemap_streets
 ```
 
 
 ```{r}
 SNAPP_estuary_map_points <- tm_shape(SNAPP_estuary_points) +
-  tm_dots(labels = "Name")
+  tm_dots(labels = "Name", col = "green")
+
+basemap_stamenlite <- tm_basemap("Stamen.TonerLite")
 
 tmap_mode("view")
 SNAPP_estuary_map_points +
-  basemap
+  basemap_stamenlite
 
 
 ```
