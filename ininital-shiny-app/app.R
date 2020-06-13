@@ -11,14 +11,15 @@ library(leaflet)
 library(sf)
 library(janitor)
 library(USAboundaries)
+library(here)
 
 # estuary_reactive
 
 # Doing the data processing
 # Would be better to save/cache the data somewhere and read it in instead
-data_goals <- read_csv("data_goals.csv")
-data_end_users <- read_csv("data_end_users.csv")
-scores_clean <- read_csv("scores_clean.csv")
+data_goals <- read_csv(here("data", "data_goals.csv"))
+data_end_users <- read_csv(here("data", "data_end_users.csv"))
+scores_clean <- read_csv(here("data", "scores_clean.csv"))
 data_scores <- full_join(data_goals, scores_clean)
 estuary_sf <- data_scores %>%
   drop_na("Long") %>%
