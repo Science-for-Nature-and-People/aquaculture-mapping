@@ -31,20 +31,31 @@ library(gridExtra)
 library(cowplot)
 library(ggpubr)
 library(USAboundaries)
+library(plotrix)
 ```
+
+
+*The new maps that have been created using the polygon data start on Line 416*
+
 
 ```{r, message = FALSE}
 #Reading in data
 
-data_goals <- read_csv("data_goals.csv")
-data_end_users <- read_csv("data_end_users.csv")
-scores_clean <- read_csv("scores_clean.csv")
+data_goals <- read_csv(here("data", "data_goals.csv"))
+data_end_users <- read_csv(here("data", "data_end_users.csv"))
+scores_clean <- read_csv(here("data", "scores_clean.csv"))
 
 #reading in county shape files for CA, OR, and WA these will be used for basemaps
 ca_counties <- read_sf(dsn = here("locations"), layer = "CA_counties")
 or_counties <- read_sf(dsn = here("locations"), layer = "OR_counties")
 wa_counties <- read_sf(dsn = here("locations"), layer = "WA_counties")
 nv_counties <- read_sf(dsn = here("locations"), layer = "NV_counties")
+
+#Reading in shapefiles for Canada and Mexico
+canada <- read_sf(dsn = here("locations"), layer = "lpr_000b16a_e")
+st_crs(canada)
+mexico <- read_sf(dsn = here("locations"), layer = "mexstates")
+st_crs(mexico)
 
 ```
 
@@ -70,28 +81,43 @@ nv <- nv_counties %>%
   summarise(area = sum(area))
 
 
+st_crs(ca) #EPSG: 4269
+st_crs(or) #EPSG: 4326
+st_crs(wa) #EPSG: 4326
+st_crs(nv) #EPSG: 4326
+
+
 ```
+
+
 
 
 ```{r, message=FALSE}
 #Cleaning and wrangling the data
 
-data_scores <- full_join(data_goals, scores_clean)
+data_scores <- full_join(data_goals, scores_clean) %>%
+  clean_names()
+
+
 
 
 estuary_sf <- data_scores %>%
-  drop_na("Long") %>%
-  st_as_sf(coords = c("Long", "Lat"), crs = 4326) %>%
+  drop_na("long") %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
   clean_names()
 
 ```
 
 ```{r}
 
-estuary_reactive <- estuary_sf %>%
+estuary_reactive_format <- estuary_sf %>%
   gather(score_type, score, -estuary_or_subbasin, -geometry)
 
 # I have put all of the scores into a single column. This should help with the interactive map or if I make a shiny app of the map.
+
+estuary_reactive_lat_lon <- data_scores %>%
+  drop_na("long") %>%
+  gather(score_type, score, -estuary_or_subbasin, - long, -lat)
 
 ```
 
@@ -307,7 +333,7 @@ community_groups_restoration_score
 #This is going to be a static map of estuary locations with color based on the community groups harvest score
 
 community_groups_harvest_score <- ggplot() +
-  geom_sf(data = ca) +
+  geom_sf(data = ca, crs = 4326) +
   geom_sf(data = or) +
   geom_sf(data = wa) +
   geom_sf(data = nv) +
@@ -386,4 +412,387 @@ pacific_estuary_plot
 
 ```
 
+
+#####################################################################################################################################################################
+
+The code below will be using the preliminary shapefiles provided by the project.
+
+```{r}
+#Making maps with shapefiles from project partners
+
+
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66")
+
+summary(SNAPP_estuary_polygons)
+
+st_crs(SNAPP_estuary_polygons)
+
+#plot(SNAPP_estuary_polygons$OBJECTID)
+
+
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44")
+
+```
+
+```{r}
+#Making individual map of the ecology esutary scores
+
+
+SNAPP_estuary_ecology_polygons <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons, aes(fill = Ecol1)) +
+  scale_fill_gradientn(colors = c(
+    "light blue",
+    "blue",
+    "dark blue"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_void()
+
+
+SNAPP_estuary_ecology_points <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Ecol1)) +
+  scale_color_gradientn(colors = c(
+    "light blue",
+    "blue",
+    "dark blue"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_void()
+
+SNAPP_estuary_ecology_polygons
+SNAPP_estuary_ecology_points
+```
+
+
+```{r}
+#Making individual map of the harvest esutary scores
+
+
+SNAPP_estuary_harvest_polygons <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons, aes(fill = Harvest1)) +
+  scale_fill_gradientn(colors = c(
+    "light green",
+    "green",
+    "dark green"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_classic()
+
+
+SNAPP_estuary_harvest_points <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Harvest1)) +
+  scale_color_gradientn(colors = c(
+    "light green",
+    "green",
+    "dark green"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_classic()
+
+SNAPP_estuary_harvest_polygons
+SNAPP_estuary_harvest_points
+```
+
+```{r}
+#Making individual map of the restoration esutary scores
+
+
+SNAPP_estuary_restoration_polygons <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons, aes(fill = Restor1)) +
+  scale_fill_gradientn(colors = c(
+    "violet",
+    "purple"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme(panel.background = element_blank())
+
+SNAPP_estuary_restoration_points <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Resto1)) +
+  scale_color_gradientn(colors = c(
+    "violet",
+    "purple"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme(panel.background = element_blank())
+
+SNAPP_estuary_restoration_polygons
+SNAPP_estuary_restoration_points
+```
+
+
+```{r}
+#Making individual map of the community esutary scores
+
+
+SNAPP_estuary_community_polygons <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons, aes(fill = Comm1)) +
+  scale_fill_gradientn(colors = c(
+    "green",
+    "blue",
+    "purple"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+SNAPP_estuary_community_points <- ggplot() +
+  geom_sf(data = us_boundaries())  +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Comm1)) +
+  scale_color_gradientn(colors = c(
+    "green",
+    "blue",
+    "purple"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+  
+
+SNAPP_estuary_community_polygons
+SNAPP_estuary_community_points
+```
+
+
+```{r}
+#using patchwork to put maps together
+
+collective_estuary_maps_polygons <- SNAPP_estuary_ecology_polygons + SNAPP_estuary_harvest_polygons + SNAPP_estuary_restoration_polygons + SNAPP_estuary_community_polygons
+
+collective_estuary_maps_points <- SNAPP_estuary_ecology_points + SNAPP_estuary_harvest_points + SNAPP_estuary_restoration_points + SNAPP_estuary_community_points
+
+
+collective_estuary_maps_polygons
+
+ggsave("figures/final_map_patchwork_polygons.png", collective_estuary_maps_polygons, width = 12, height = 7, dpi = 150)
+
+collective_estuary_maps_points
+
+ggsave("figures/map_patchwork_points.png", collective_estuary_maps_points, width = 12, height = 7, dpi = 150)
+```
+
+
+```{r}
+#Here I am going to be working on displaying multiple attributes on one map I will be using points for these maps
+
+ecology_harvest_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Harvest1, size = Ecol1)) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+ecology_restoration_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Resto1, size = Ecol1)) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) 
+
+ecology_comm_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_points, aes(color = Comm1, size = Ecol1)) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) 
+
+ecology_harvest_map
+ecology_restoration_map
+ecology_comm_map
+
+
+```
+
+```{r}
+#Here I will focus on maps with ecology scores over 0.5
+
+high_ecology_polygons <- SNAPP_estuary_polygons %>%
+  filter(Ecol1 > 0.5)
+
+high_ecology_points <- SNAPP_estuary_points %>%
+  filter(Ecol1 > 0.5)
+
+high_ecology_harvest_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_points, aes(color = Harvest1), size = 4) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+high_ecology_restoration_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_points, aes(color = Resto1), size = 4) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+high_ecology_comm_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_points, aes(color = Comm1), size = 4) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+
+high_ecology_harvest_map
+high_ecology_restoration_map
+high_ecology_comm_map
+
+
+```
+
+
+```{r}
+#This will be for a close up of estuarys with high ecology score
+
+Zoom_high_ecology1 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
+  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
+  theme_bw()
+
+Zoom_high_ecology2 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
+  theme_bw()
+
+
+Zoom_high_ecology3 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_polygons, fill = "red", color = "red") +  
+  coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
+  theme_bw()
+
+
+Zoom_high_ecology1
+Zoom_high_ecology2
+Zoom_high_ecology3
+
+```
+
+```{r}
+#this will be trying to make the close up maps with the point data
+
+Zoom_high_ecology1_points <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = high_ecology_points, color = "red", size = 3) +  
+  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
+  theme_bw()
+
+Zoom_high_ecology2_points <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = high_ecology_points, fill = "red", color = "red", size = 3) +  
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
+  theme_bw()
+
+
+Zoom_high_ecology3_points <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_points, fill = "red", color = "red", size = 3) +  
+  coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
+  theme_bw()
+
+
+Zoom_high_ecology1_points
+Zoom_high_ecology2_points
+Zoom_high_ecology3_points
+
+
+```
+
+
+```{r}
+#trying to use plotmatrix to add bar graphs to the map 
+
+# Here is a resource I have found for adding bar graphs to a map. https://gis.stackexchange.com/questions/219880/plotting-bar-charts-on-maps-in-r
+
+
+```
+
+
+```{r}
+# Using tmap to make a leaflet map with the estuary polygons
+
+
+SNAPP_estuary_map_polygons <- tm_shape(SNAPP_estuary_polygons) +
+  tm_polygons(label = "Estuary_Na")
+  
+
+basemap_streets <- tm_basemap("Esri.WorldStreetMap")
+
+tmap_mode("view")
+SNAPP_estuary_map_polygons +
+  basemap_streets
+```
+
+
+```{r}
+SNAPP_estuary_map_points <- tm_shape(SNAPP_estuary_points) +
+  tm_dots(labels = "Name", col = "green")
+
+basemap_stamenlite <- tm_basemap("Stamen.TonerLite")
+
+tmap_mode("view")
+SNAPP_estuary_map_points +
+  basemap_stamenlite
+
+
+```
 
