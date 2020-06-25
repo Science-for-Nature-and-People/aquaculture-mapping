@@ -33,6 +33,7 @@ library(ggpubr)
 library(USAboundaries)
 library(plotrix)
 library(patchwork)
+library(scatterpie)
 ```
 
 
@@ -835,6 +836,45 @@ tmap_mode("view")
 SNAPP_estuary_map_points +
   basemap_stamenlite
 
+
+```
+
+```{r}
+#Using scatterpie to put piecharts over map
+
+#need wide format data
+pie_data <- estuary_reactive_lat_lon %>% 
+  pivot_wider(id_cols = c(estuary_or_subbasin, lat, long), names_from = score_type, values_from = score)
+
+pie_data$radius <- .225
+
+```
+
+```{r}
+
+Zoom_pie_1 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
+  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
+  theme_bw()
+
+Zoom_pie_2 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+ geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
+  theme_bw()
+
+Zoom_pie_3 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = mexico) +
+  geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
+  coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
+  theme_bw()
+
+Zoom_pie_1
+Zoom_pie_2
+Zoom_pie_3
 
 ```
 
