@@ -852,6 +852,8 @@ pie_data$radius <- .225
 
 ```{r}
 
+#using the scores from the 10 estuary/subbasins
+
 Zoom_pie_1 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
@@ -873,8 +875,55 @@ Zoom_pie_3 <- ggplot() +
   theme_bw()
 
 Zoom_pie_1
-Zoom_pie_2
+Zoom_pie_2 #this map has issue with overlap
 Zoom_pie_3
+
+```
+```{r}
+#using sites with ecology scores over 0.5
+
+pie_data_high <- as.data.frame(high_ecology_points)
+
+high_ecol_pie1 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name), data = pie_data_high, cols = c("Ecol1", "Resto1", "Harvest1", "Comm1"))+
+  coord_sf(xlim = c(-125, -121), ylim = c(45, 49.5)) +
+  theme_bw()
+
+high_ecol_pie2 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name), data = pie_data_high, cols = c("Ecol1", "Resto1", "Harvest1", "Comm1"))+ 
+  coord_sf(xlim = c(-123.5, -119), ylim = c(34, 38.5)) +
+  theme_bw()
+
+high_ecol_pie3 <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = mexico) +
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name), data = pie_data_high, cols = c("Ecol1", "Resto1", "Harvest1", "Comm1"))+ 
+  coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5)) +
+  theme_bw()
+
+high_ecol_pie1
+high_ecol_pie2
+high_ecol_pie3
+
+```
+```{r}
+
+#testing changing alpha to better view overlapping sites
+
+high_ecology_rest_alpha <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = high_ecology_points, aes(color = Resto1), size = 4, alpha = 0.75) +  
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_bw()
+
+high_ecology_rest_alpha
 
 ```
 
