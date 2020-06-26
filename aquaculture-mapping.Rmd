@@ -695,7 +695,7 @@ high_ecology_polygons <- SNAPP_estuary_polygons %>%
   filter(Ecol1 > 0.5)
 
 high_ecology_points <- SNAPP_estuary_points %>%
-  filter(Ecol1 > 0.5)
+  filter(Ecol1 >= 0.5)
 
 high_ecology_harvest_map <- ggplot() +
   geom_sf(data = us_boundaries()) +
@@ -843,42 +843,60 @@ SNAPP_estuary_map_points +
 #Using scatterpie to put piecharts over map
 
 #need wide format data
-pie_data <- estuary_reactive_lat_lon %>% 
-  pivot_wider(id_cols = c(estuary_or_subbasin, lat, long), names_from = score_type, values_from = score)
+pie_data <- high_ecology_points %>%
+  select(-NCEASmap) %>%
+  rename(ecology = Ecol1, restoration = Resto1, harvest = Harvest1, commercial = Comm1) %>%
+  as.data.frame()
 
-pie_data$radius <- .225
+# %>% 
+#   pivot_wider(id_cols = c(estuary_or_subbasin, lat, long), names_from = score_type, values_from = score)
+
+pie_data$radius <- pie_data$ecology/3
 
 ```
 
-```{r}
+```{r scatterpie, include=FALSE}
 
 #using the scores from the 10 estuary/subbasins
 
-Zoom_pie_1 <- ggplot() +
-  geom_sf(data = us_boundaries()) +
-  geom_sf(data = canada) +
-  geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
-  coord_sf(xlim = c(-125, -121.5), ylim = c(45, 49.5)) +
-  theme_bw()
+  Zoom_pie_1 <-  ggplot() +
+    geom_sf(data = us_boundaries()) +
+    geom_sf(data = canada) + 
+    geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                    cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+    # geom_scatterpie_legend(pie_data$radius, x=-121.5, y=49) +
+    coord_sf(xlim = c(-125.5, -120), ylim = c(45, 49.5)) +
+    theme_bw()
+
 
 Zoom_pie_2 <- ggplot() +
   geom_sf(data = us_boundaries()) +
- geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                    cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+  # geom_scatterpie_legend(pie_data$radius, x=-119.5, y=38) +
   coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5)) +
   theme_bw()
 
 Zoom_pie_3 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = mexico) +
-  geom_scatterpie(aes(x = long, y = lat, group = estuary_or_subbasin, r = radius), data = pie_data, cols = c("ecological", "harvest", "community_engagement_restotation", "community_engagement_harvest", "coastwide_conservation", "coastwide_planner", "restoration_practitioner", "community_groups_restoration", "community_groups_harvest"))+  
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                    cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8) +
+  geom_scatterpie_legend(pie_data$radius, x=-119.5, y=30.5, ) +
   coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
   theme_bw()
 
-Zoom_pie_1
-Zoom_pie_2 #this map has issue with overlap
-Zoom_pie_3
+
+# put it together
+Zoom_pie_ecol_rad <- Zoom_pie_1 + Zoom_pie_2 + Zoom_pie_3
+ggsave("figures/final_map_pie_ecol_rad.png", Zoom_pie_ecol_rad, width = 12, height = 6, dpi = 300)
 
 ```
+
+```{r, dot maps, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
+```
+
 ```{r}
 #using sites with ecology scores over 0.5
 
