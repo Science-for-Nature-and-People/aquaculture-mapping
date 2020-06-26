@@ -881,7 +881,7 @@ Zoom_pie_3 <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = mexico) +
   geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
-                    cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8) +
+                    cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, legend_name = "Score") +
   geom_scatterpie_legend(pie_data$radius, x=-119.5, y=30.5, ) +
   coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
   theme_bw()
