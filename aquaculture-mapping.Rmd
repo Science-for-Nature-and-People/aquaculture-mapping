@@ -853,7 +853,7 @@ pie_data <- high_ecology_points %>%
 ```{r scatterpie}
 
 #using the scores from the 10 estuary/subbasins with radius proportional to Ecological score
-pie_data$radius <- sqrt(pie_data$ecology)/3
+pie_data$radius <- pie_data$ecology/2.5
 
 Zoom_pie_1 <-  ggplot() +
   geom_sf(data = us_boundaries()) +
@@ -870,7 +870,7 @@ Zoom_pie_2 <- ggplot() +
   geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
                     cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
   # geom_scatterpie_legend(pie_data$radius, x=-119.5, y=38) +
-  coord_sf(xlim = c(-123.5, -119), ylim = c(34.8, 38.5)) +
+  coord_sf(xlim = c(-123.5, -119), ylim = c(34.85, 38.5)) +
   theme_bw()
 
 Zoom_pie_3 <- ggplot() +
