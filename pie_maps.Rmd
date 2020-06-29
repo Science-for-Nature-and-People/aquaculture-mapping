@@ -56,7 +56,7 @@ nv_counties <- read_sf(dsn = here("locations"), layer = "NV_counties")
 
 #Reading in shapefiles for Canada and Mexico
 canada <- read_sf(dsn = here("locations"), layer = "lpr_000b16a_e")
-# st_crs(canada) #EPSG: 9001
+#st_crs(canada) #EPSG: 9001
 # We need to reproject the Canada layer
 canada <- st_transform(canada, crs = st_crs(or_counties))
 
@@ -152,6 +152,7 @@ Zoom_pie_3_fix <- ggplot() +
 Zoom_pie_ecol_rad_fixed <- Zoom_pie_1_fix + Zoom_pie_2_fix + Zoom_pie_3_fix
 ggsave("figures/final_map_pie_ecol_rad_fixed.png", Zoom_pie_ecol_rad_fixed, width = 12, height = 6, dpi = 300)
 
+
 ```
 
 ```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
@@ -176,8 +177,82 @@ high_ecology_rest_alpha
 
 ```
 
-```{r leaflet map}
 
+```{r projection changed - proportional radius}
+# Made scatterplots round by using different map data
+
+world_map <- map_data("world")
+
+pie_data$radius <- pie_data$ecology/2.5
+
+Zoom_1_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE)+
+  coord_sf(xlim = c(-125.5, -121), ylim = c(45, 49.5))+
+  xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+Zoom_2_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE)+
+coord_sf(xlim = c(-123.5, -119), ylim = c(34.85, 38.5)) +
+  xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+Zoom_3_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, cols = c("restoration", "harvest", "commercial"), color=NA, alpha=.8, legend_name = "Score")+
+geom_scatterpie_legend(pie_data$radius, x=-119.5, y=30.5, ) +
+  coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
+   xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+Zooms_round <-  Zoom_1_round + Zoom_2_round + Zoom_3_round
+ggsave("figures/final_map_pie_ecol_rad_round.png", Zooms_round, width = 12, height = 6, dpi = 300)
+
+```
+
+```{r projection changed - fixed radius}
+
+pie_data$radius <- .225
+
+Zoom_1_fixed_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                  cols = c("ecology", "restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+  coord_sf(xlim = c(-125.5, -121), ylim = c(45, 49.5))+
+  xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+Zoom_2_fixed_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                  cols = c("ecology", "restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+  coord_sf(xlim = c(-123.5, -119), ylim = c(34.8, 38.5)) +
+  xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+Zoom_3_fixed_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
+  geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
+                  cols = c("ecology", "restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+  coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
+  xlab("Longitude")+
+  ylab("Latitude")+
+  theme_bw()
+
+# put it together
+Zoom_pie_ecol_rad_fixed_round <- Zoom_1_fixed_round + Zoom_2_fixed_round + Zoom_3_fixed_round
+ggsave("figures/final_map_pie_ecol_rad_fixed_round.png", Zoom_pie_ecol_rad_fixed_round, width = 12, height = 6, dpi = 300)
+
+```
+
+```{r leaflet map}
 #testing out leaflet map for scatterpie plots
 
 #making leaflet using regular points
@@ -187,42 +262,31 @@ leaflet_plain <- leaflet(pie_data) %>%
              lat = ~Latitude,
              popup = ~as.character(Name),
              label = ~as.character(Name))
-  
-```
 
-```{r}
-#trying mapview package which allows for graph popups
-
-#just the points
-mapview(estuary_sf)
-
-#adding color based on a column
-mapview(estuary_sf,
-        zcol = "ecological")
-
-#can use popupGraph() to insert ggplot outputs
+#can add a graph in a pop-out window using popupGraph().  May work best for a Shiny App
 
 #meaningless plot (just for testing)
 test_pie <- ggplot(estuary_sf, aes(x = "", y = ecological, fill = estuary_or_subbasin))+
   geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
   coord_polar("y", start=0)
 
+leaflet_graph <- leaflet(pie_data) %>% 
+  addTiles() %>% 
+  addMarkers(lng = ~Longitude,
+             lat = ~Latitude,
+             popup = popupGraph(test_pie),
+             label = ~as.character(Name))
 
-mapview(estuary_sf,
-        zcol = "ecological",
-        popup = popupGraph(test_pie))
+leaflet_graph
 
+  
 ```
 
-```{r projection tweaking}
-# trying to make scatterpie plots round
-
-```
 
 ```{r}
-#Adding plot to map using mapview or leaflet and popups to view each pie chart
+#Adding plot as a popup figure to map
 
-#making plots & saving as svg to use in leaflet
+#making plots & saving as svg
 for( i in 1:10){
   
   temp_data <- data_scores[i,] %>% #working on the selected row
@@ -239,7 +303,7 @@ for( i in 1:10){
 }
 
 #trying to view the pie plots as popups
-#first tried using just one of the plots for all the points to see if it would work, but it did not
+#first tried using just one of the plots for all the points to see if it would work
 mapview(estuary_sf,
         popup = popupImage("/figures/pie_plot_1.svg")) #map is created, but images are broken
 
