@@ -315,5 +315,10 @@ mapview(estuary_sf,
 
 ```
 
+```{r centroids}
+
+#testing where the estuary polygon centroids are in relation to points (use st_centroid)
+
+```
 
 
