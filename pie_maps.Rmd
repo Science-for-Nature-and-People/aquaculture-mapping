@@ -13,7 +13,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, include=FALSE}
 #Loading packages
 
 library(scatterpie)
@@ -64,7 +64,6 @@ mexico <- read_sf(dsn = here("locations"), layer = "mexstates")
 # st_crs(mexico) #EPSG: 4326
 
 ```
-
  
 ```{r}
 #Using scatterpie to put piecharts over map
@@ -76,7 +75,6 @@ pie_data <- high_ecology_points %>%
   as.data.frame()
 
 ```
-
 
 ```{r scatterpie}
 
@@ -215,6 +213,11 @@ ggsave("figures/final_map_pie_ecol_rad_round.png", Zooms_round, width = 12, heig
 
 ```
 
+``````{r, scatterpie all round, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/final_map_pie_ecol_rad_round.png")
+```
+
+
 ```{r projection changed - fixed radius}
 
 pie_data$radius <- .225
@@ -252,6 +255,10 @@ ggsave("figures/final_map_pie_ecol_rad_fixed_round.png", Zoom_pie_ecol_rad_fixed
 
 ```
 
+```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed_round.png")
+```
+
 ```{r leaflet map}
 #testing out leaflet map for scatterpie plots
 
@@ -282,7 +289,6 @@ leaflet_graph
   
 ```
 
-
 ```{r}
 #Adding plot as a popup figure to map
 
@@ -308,3 +314,6 @@ mapview(estuary_sf,
         popup = popupImage("/figures/pie_plot_1.svg")) #map is created, but images are broken
 
 ```
+
+
+
