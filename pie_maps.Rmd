@@ -27,6 +27,8 @@ library(patchwork)
 library(mapview)
 library(leaflet)
 library(leafpop)
+library(RColorBrewer)
+library(leaflet.minicharts)
 
 ```
 
@@ -48,6 +50,8 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ES
 
 high_ecology_points <- SNAPP_estuary_points %>%
   filter(Ecol1 >= 0.5)
+
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66")
 
 ca_counties <- read_sf(dsn = here("locations"), layer = "CA_counties")
 or_counties <- read_sf(dsn = here("locations"), layer = "OR_counties")
@@ -115,7 +119,7 @@ ggsave("figures/final_map_pie_ecol_rad.png", Zoom_pie_ecol_rad, width = 12, heig
 ```
 
 ```{r, scatterpie all, fig.align="center",  echo=FALSE}
-knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
+#knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
 ```
 
 ```{r scatterpied fixed}
@@ -154,7 +158,7 @@ ggsave("figures/final_map_pie_ecol_rad_fixed.png", Zoom_pie_ecol_rad_fixed, widt
 ```
 
 ```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
-knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
+#knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
 ```
 
 ```{r}
@@ -243,7 +247,7 @@ Zoom_2_fixed_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
 Zoom_3_fixed_round <- ggplot(world_map, aes(x = long, y = lat, group = group)) +
   geom_polygon(fill="lightgray", colour = "black", lwd = 0.25)+
   geom_scatterpie(aes(x = Longitude, y = Latitude, group = Name, r = radius), data = pie_data, 
-                  cols = c("ecology", "restoration", "harvest", "commercial"), color=NA, alpha=.8, show.legend = FALSE) +
+                  cols = c("ecology", "restoration", "harvest", "commercial"), color=NA, alpha=.8, legend_name = "Score") +
   coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
   xlab("Longitude")+
   ylab("Latitude")+
@@ -315,9 +319,81 @@ mapview(estuary_sf,
 
 ```
 
-```{r centroids}
 
+```{r leaflet minicharts with picharts}
+#trying leaflet.minicharts: https://cran.r-project.org/web/packages/leaflet.minicharts/vignettes/introduction.html
+
+#need column with totals if we want to sale barcharts
+#pie_data$total <- pie_data$ecology  + pie_data$restoration + pie_data$harvest + pie_data$commercial
+
+leaflet_minichart_pie <- leaflet(pie_data) %>% 
+  addTiles() %>% 
+  addMinicharts(lng = pie_data$Longitude, lat = pie_data$Latitude,
+                type = "pie",
+                chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")],
+                #width = 60 * sqrt(pie_data$total) / sqrt(max(pie_data$total)),
+                transitionTime = 0)
+
+leaflet_minichart_pie
+
+```
+ 
+```{r leaflet minicharts with barcharts}
+
+leaflet_minichart_bar <- leaflet(pie_data) %>% 
+  addTiles() %>% 
+  addMinicharts(lng = pie_data$Longitude, lat = pie_data$Latitude,
+                chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")])
+
+leaflet_minichart_bar
+
+```
+ 
+```{r leaflet minichart with single values}
+#can also represent single values as a weighted point, might be good for use in a Shiny App
+
+leaflet_minichart_ecol <- leaflet(pie_data) %>%
+  addTiles() %>% 
+  addMinicharts(
+    lng = pie_data$Longitude, lat = pie_data$Latitude,
+    chartdata = pie_data$ecology,
+    showLabels = TRUE,
+    width = 45
+  )
+
+leaflet_minichart_ecol
+```
+```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
+
+#st_centroid needs projection (using NAD83/California Albers)
+SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
+  st_transform(crs = 3310)
+
+#creating centroid data
+SNAPP_estuary_polygons_NAD83$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry)
+
+```
+  
+```{r mapping centroids}
+
+SNAPP_estuary_centroid_points <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons_NAD83$centroid, color = "red", size = 2) +
+  geom_sf(data = SNAPP_estuary_points, color = "blue", size = 1.5)+
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  theme_void()
+
+SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some of the estuary centroids are not represented by the estuary points file
+
+# I was wondering if some estuaries had multiple polygons for the same estuary:
+# length(unique(SNAPP_estuary_polygons$Estuary_Na)) 
+# 66 polygons, each for different estuaries
+
+# length(unique(SNAPP_estuary_points$Name)) 
+# 44 points, each for different estuaries
 
 ```
 
