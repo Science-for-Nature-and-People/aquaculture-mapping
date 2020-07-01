@@ -221,7 +221,6 @@ ggsave("figures/final_map_pie_ecol_rad_round.png", Zooms_round, width = 12, heig
 knitr::include_graphics("figures/final_map_pie_ecol_rad_round.png")
 ```
 
-
 ```{r projection changed - fixed radius}
 
 pie_data$radius <- .225
@@ -363,6 +362,7 @@ leaflet_minichart_ecol <- leaflet(pie_data) %>%
 
 leaflet_minichart_ecol
 ```
+
 ```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
 
@@ -397,4 +397,38 @@ SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some
 
 ```
 
+```{r}
+#Trying to overlay barcharts on a static ggplot map
+bar_data <-  data_scores %>%
+  drop_na("long") %>% 
+  dplyr::select(-coastwide_coservation) %>% 
+  pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+
+#normal ggplot for reference
+ggplot(data = bar_data, aes(x = category, y = score))+
+  geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
+  facet_grid(~estuary_or_subbasin)
+
+# make a separate ggplot for each estuary:
+test_plots <- data_scores %>% 
+  group_by(estuary_or_subbasin) %>% 
+  nest() %>% 
+  mutate(plot = map2(data, estuary_or_subbasin,
+                     ~ggplot(data = .x) +
+                       aes(x = category, y = score) +
+                       geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+           )
+         )
+
+# get spatial layer to define where the plots will be placed:
+
+# turn the plots into annotations: 
+estuary_annotation <- data_scores %>% 
+  left_join(test_plots, by = "estuary_or_subbasin") #still need to add mutate
+
+# make ggplot and add list of notations
+
+
+
+```
 
