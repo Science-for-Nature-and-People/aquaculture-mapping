@@ -424,7 +424,8 @@ test_plots <- data_scores %>%
 
 # turn the plots into annotations: 
 estuary_annotation <- data_scores %>% 
-  left_join(test_plots, by = "estuary_or_subbasin") #still need to add mutate
+  select(estuary_or_subbasin, lat, long) %>% 
+  left_join(test_plots, by = "estuary_or_subbasin")
 
 # make ggplot and add list of notations
 
