@@ -318,7 +318,6 @@ mapview(estuary_sf,
 
 ```
 
-
 ```{r leaflet minicharts with picharts}
 #trying leaflet.minicharts: https://cran.r-project.org/web/packages/leaflet.minicharts/vignettes/introduction.html
 
@@ -339,12 +338,31 @@ leaflet_minichart_pie
  
 ```{r leaflet minicharts with barcharts}
 
+bar_cols <- c("#33a02c", "#b2df8a", "#1f78b4", "#a6cee3") #setting the colors for the barcharts
+
 leaflet_minichart_bar <- leaflet(pie_data) %>% 
   addTiles() %>% 
-  addMinicharts(lng = pie_data$Longitude, lat = pie_data$Latitude,
-                chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")])
+  addProviderTiles("Esri.WorldGrayCanvas") %>% #changing background
+  
+  addMinicharts(lng = pie_data$Longitude, 
+                lat = pie_data$Latitude,
+                chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")],
+                colorPalette = bar_cols)
 
 leaflet_minichart_bar
+
+#setting the zoom
+leaflet_minichart_bar_zoom <- leaflet(pie_data) %>% 
+  addTiles() %>% 
+  addProviderTiles("Esri.WorldGrayCanvas") %>% #changing background
+  
+  addMinicharts(lng = pie_data$Longitude, 
+                lat = pie_data$Latitude,
+                chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")],
+                colorPalette = bar_cols) %>% 
+  setView(-121.7379, 36.82495, zoom = 7)
+
+leaflet_minichart_bar_zoom
 
 ```
  
@@ -362,6 +380,23 @@ leaflet_minichart_ecol <- leaflet(pie_data) %>%
 
 leaflet_minichart_ecol
 ```
+
+```{r saving leaflet image}
+#trying to save leaflet output as an image
+
+# library(plotly)
+# library(htmlwidgets)
+# library(webshot)
+# library(mapview)
+# 
+# saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
+# 
+# mapshot(leaflet_minichart_bar, file = "leaflet_test.png", 
+#   remove_controls = c("zoomControl", "layersControl", "homeButton",
+#   "scaleBar"))
+
+```
+
 
 ```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
@@ -397,6 +432,77 @@ SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some
 
 ```
 
+```{r online example code}
+
+#remotes::install_github("flowwest/CDECRetrieve")
+library(CDECRetrieve)
+library(purrr)
+library(zoo)
+#install.packages("ggspatial")
+library(ggspatial)
+
+# CDEC station codes to retrieve data for
+stations = c('BDL', 'BLL', 'CSE', 'FLT', 'GOD', 'GZL', 'HON', 'HUN',
+  'IBS', 'MAL', 'MRZ', 'MSL', 'NSL', 'PCT', 'RYC', 'TEA', 'VOL')
+
+# get station locations
+station.locations = map_dfr(stations, cdec_stations) %>%
+  transmute(location_id = toupper(station_id), name,
+    latitude, longitude)
+
+# get station EC data
+station.data = map_dfr(stations, cdec_query, sensor_num = 100L,
+  dur_code = "E", start_date = '2016-09-25',
+  end_date = '2016-11-05') %>%
+  group_by(
+    location_id,
+    datetime = as.POSIXct(round(datetime, 'hours'))
+  ) %>%
+  summarize(mean = mean(parameter_value, na.rm = TRUE)) %>%
+  mutate(windowmean = rollmean(mean, 25, 'center')) %>%
+  ungroup()
+
+# make a separate ggplot for each station
+station.plots = station.data %>%
+  nest(-location_id) %>%
+  mutate(plot = map2(data, location_id,
+    ~ ggplot(.x) + ggtitle(.y) + theme_bw(base_size = 8) +
+    aes(x = datetime, y = windowmean) + geom_line() +
+    scale_x_datetime(NULL, breaks = as.POSIXct(c("2016-10-01",
+      "2016-10-15", "2016-10-31")), date_labels = "%b %d",
+      limits = as.POSIXct(c("2016-10-01", "2016-10-31"))) +
+    scale_y_continuous("Spec. Conductivity",
+      limits = c(4000, 30000))
+    )
+  )
+
+#get station point data
+station.points = st_as_sf(station.locations, crs = 4326,
+  coords = c("longitude", "latitude")) %>%
+  st_transform(3857)
+
+#create annotation
+station.annotations = station.points %>%
+  bind_cols(as_tibble(st_coordinates(.))) %>%
+  st_drop_geometry() %>%
+  select(location_id, X, Y) %>%
+  left_join(station.plots, by = "location_id") %>%
+  mutate(annotation = pmap(list(X, Y, plot),
+    ~ annotation_custom(ggplotGrob(..3), #convert each plot to a grob via ggplotGrob 
+      xmin = ..1 - 2000, xmax = ..1 + 2000, #explicitly defining the bounding box of each annotation layer.
+      ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
+  pull(annotation)
+
+#create map
+ggplot(station.points) +
+  xlim(c(-13598000, -13563500)) +
+  annotation_map_tile(zoom = 13) +
+  geom_sf(shape = NA) +
+  station.annotations
+
+```
+
+
 ```{r}
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
@@ -411,8 +517,7 @@ ggplot(data = bar_data, aes(x = category, y = score))+
 
 # make a separate ggplot for each estuary:
 test_plots <- data_scores %>% 
-  group_by(estuary_or_subbasin) %>% 
-  nest() %>% 
+  nest(-estuary_or_subbasin) %>% 
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
@@ -420,16 +525,27 @@ test_plots <- data_scores %>%
            )
          )
 
-# get spatial layer to define where the plots will be placed:
+# get spatial layer to define where the plots will be placed
+plot_points <- estuary_sf %>% 
+  select(estuary_or_subbasin, geometry)
+
+plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) %>%
+  st_transform(3857)
 
 # turn the plots into annotations: 
-estuary_annotation <- data_scores %>% 
-  select(estuary_or_subbasin, lat, long) %>% 
-  left_join(test_plots, by = "estuary_or_subbasin")
+estuary_annotation <- plot_points %>% 
+  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+  st_drop_geometry() %>% #removes geometry from sf object
+  left_join(test_plots, by = "estuary_or_subbasin") %>% 
+  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+                           ~annotation_custom(ggplotGrob(..3),
+                                              xmin = ..1 - 2000, xmax = ..1 + 2000,
+                                              ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
+  pull(annotation)
+
+
 
 # make ggplot and add list of notations
-
-
 
 ```
 
