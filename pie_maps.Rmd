@@ -119,7 +119,7 @@ ggsave("figures/final_map_pie_ecol_rad.png", Zoom_pie_ecol_rad, width = 12, heig
 ```
 
 ```{r, scatterpie all, fig.align="center",  echo=FALSE}
-#knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
+# knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
 ```
 
 ```{r scatterpied fixed}
@@ -158,7 +158,7 @@ ggsave("figures/final_map_pie_ecol_rad_fixed.png", Zoom_pie_ecol_rad_fixed, widt
 ```
 
 ```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
-#knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
+# knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
 ```
 
 ```{r}
@@ -516,8 +516,9 @@ ggplot(data = bar_data, aes(x = category, y = score))+
   facet_grid(~estuary_or_subbasin)
 
 # make a separate ggplot for each estuary:
-test_plots <- data_scores %>% 
-  nest(-estuary_or_subbasin) %>% 
+test_plots <- bar_data %>% 
+  group_by(estuary_or_subbasin) %>% 
+  nest() %>%
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
