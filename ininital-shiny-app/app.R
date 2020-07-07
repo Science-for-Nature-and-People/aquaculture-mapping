@@ -47,6 +47,10 @@ ui <- fluidPage(
                              label = "Choose Score",
                              choices = unique(SNAPP_estuary_points$score_type)
                  ),
+                 sliderInput(inputId = "aqua_score_range",
+                             label = "Choose Score Range",
+                             min = 0, max = 1, value = c(0,1)
+                             )
                  
     ),
     mainPanel("Output Map",
@@ -60,7 +64,8 @@ server <- function(inputs, outputs) {
   # Filter the data
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
-      filter(score_type %in% (inputs$aqua_score))
+      filter(score_type %in% (inputs$aqua_score)) %>%
+      filter(score %in% (inputs$aqua_score_range))
   })
   
   # Render the map
