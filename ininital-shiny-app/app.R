@@ -45,7 +45,9 @@ ui <- fluidPage(
                  
     ),
     mainPanel("Output Map",
-              leafletOutput(outputId = "Score_Map"))
+              leafletOutput(outputId = "Score_Map", 
+                            width = 550, height = 800
+                            ))
   )
 )
 
@@ -63,11 +65,10 @@ server <- function(inputs, outputs) {
   outputs$Score_Map <- renderLeaflet({
     
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()["score"]) +
-      tm_dots(label = "Name", col = "score") +
+      tm_dots(labels = "Name", col = "score", n = 5, style = "pretty", size = 0.25) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
     
-
   })
   
 }
