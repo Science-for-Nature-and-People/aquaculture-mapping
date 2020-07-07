@@ -367,18 +367,69 @@ leaflet_minichart_bar_zoom
 ```
  
 ```{r leaflet minichart with single values}
-#can also represent single values as a weighted point, might be good for use in a Shiny App
 
+#can also represent single values as a weighted point, might be good for use in a Shiny App
 leaflet_minichart_ecol <- leaflet(pie_data) %>%
   addTiles() %>% 
   addMinicharts(
     lng = pie_data$Longitude, lat = pie_data$Latitude,
-    chartdata = pie_data$ecology,
+    chartdata = pie_data$ecol,
     showLabels = TRUE,
     width = 45
   )
 
 leaflet_minichart_ecol
+
+
+
+#Adding a selector box to leaflet: unfortunately, the minichart function does not support the group argument
+
+leaflet_points <- pie_data %>% #convert zeros to NAs so they do not get plotted on map
+  mutate(ecology = na_if(ecology, "0")) %>% 
+  mutate(restoration = na_if(restoration, "0")) %>%
+  mutate(harvest = na_if(harvest, "0")) %>% 
+  mutate(commercial = na_if(commercial, "0"))
+
+point_weight = 20
+
+leaflet_select <- leaflet(leaflet_points) %>%
+  addTiles() %>% 
+  addProviderTiles("Esri.WorldGrayCanvas") %>% #changing background
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$ecology, 
+                   group = "ecology", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$ecology,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>%
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$restoration, 
+                   group = "restoration", 
+                   stroke = F, 
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$restoration,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$harvest, 
+                   group = "harvest", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$harvest,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$commercial, 
+                   group = "commercial", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$commercial,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addLayersControl(
+    baseGroups = c("ecology", "restoration", "harvest", "commercial"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+leaflet_select
+
 ```
 
 ```{r saving leaflet image}
