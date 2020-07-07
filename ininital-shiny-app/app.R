@@ -12,6 +12,7 @@ library(sf)
 library(janitor)
 library(USAboundaries)
 library(here)
+library(leaflet)
 
 # estuary_reactive
 
@@ -28,6 +29,12 @@ estuary_sf <- data_scores %>%
 estuary_reactive <- estuary_sf %>%
   gather(score_type, score, -estuary_or_subbasin, -geometry)
 
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>%
+  select(-NCEASmap, - Latitude, -Longitude) %>%
+  gather(score_type, score, -Name, -geometry)
+
+basemap_streets <- tm_basemap("Esri.WorldStreetMap")
+
 
 ##### Beginning of the App
 
@@ -38,11 +45,12 @@ ui <- fluidPage(
     sidebarPanel("Score Widget",
                  selectInput(inputId = "aqua_score",
                              label = "Choose Score",
-                             choices = unique(estuary_reactive$score_type)
-                 )
+                             choices = unique(SNAPP_estuary_points$score_type)
+                 ),
+                 
     ),
     mainPanel("Output Map",
-              plotOutput(outputId = "Score_Map"))
+              leafletOutput(outputId = "Score_Map"))
   )
 )
 
@@ -51,23 +59,29 @@ ui <- fluidPage(
 server <- function(inputs, outputs) {
   # Filter the data
   estuary_shiny <- reactive({
-    estuary_reactive %>%
+    SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score))
   })
   
   # Render the map
-  outputs$Score_Map <- renderPlot({
-    ggplot() +
-      geom_sf(data = us_boundaries()) +
-      geom_sf(data = estuary_shiny()["score"], aes(color = score, size = score)) +
-      scale_color_gradientn(colors = c(
-        "red",
-        "green",
-        "blue"
-      )) +
-      coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
-      theme_minimal() +
-      scale_x_continuous(breaks = c(-124, -121, 118))
+  outputs$Score_Map <- renderLeaflet({
+    
+    SNAPP_estuary_map_points <- tm_shape(estuary_shiny()["score"]) +
+      tm_dots(label = "Name", col = "score") +
+      basemap_streets
+    tmap_leaflet(SNAPP_estuary_map_points)
+    
+    #ggplot() +
+     # geom_sf(data = us_boundaries()) +
+      #geom_sf(data = estuary_shiny()["score"], aes(color = score, size = score)) +
+      #scale_color_gradientn(colors = c(
+      #  "red",
+       # "green",
+        #"blue"
+    #  )) +
+      #coord_sf(xlim = c(-124.5, -117.5), ylim = c(33, 48.5)) +
+      #theme_minimal() +
+      #scale_x_continuous(breaks = c(-124, -121, 118))
     #plot(estuary_shiny()["score"])
   })
   
