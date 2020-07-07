@@ -30,6 +30,7 @@ library(leafpop)
 library(RColorBrewer)
 library(leaflet.minicharts)
 
+
 ```
 
 ```{r}
@@ -548,9 +549,10 @@ station.annotations = station.points %>%
 ggplot(station.points) +
   xlim(c(-13598000, -13563500)) +
   annotation_map_tile(zoom = 13) +
-  geom_sf(shape = NA) +
+  geom_sf(shape = NA, color = stations)+
   station.annotations
 
+  
 ```
 
 
@@ -595,9 +597,70 @@ estuary_annotation <- plot_points %>%
                                               ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
   pull(annotation)
 
-
-
 # make ggplot and add list of notations
+ggplot(plot_points) +
+  xlim(c(-13598000, -13563500)) +
+  annotation_map_tile(zoom = 13) +
+  geom_sf(shape = NA) +
+  estuary_annotation
+
+```
+
+Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
+
+```{r}
+#install.packages("magick")
+library(magick)
+library(ggmap)
+library(maps)
+
+#base map
+mp <-  NULL
+mapWorld <- borders("world", colour="gray70", fill="gray70") 
+
+fig <- image_graph(width = 850, height = 550, res = 96)
+ggplot() + mapWorld
+
+for( i in 1:10){
+  
+  temp_data <- data_scores[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long, coastwide_coservation)) %>% 
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+
+  temp_plot <- ggplot(temp_data, aes(x = "", y = category, fill = score))+
+  geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+  
+  plot_fig <- image_graph(width = 100, height = 75, res = 96)
+  
+  #final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
+  final <- image_composite(fig, plot_fig, offset = "+75+150")
+  
+  print(final)
+  
+}
+
+final
+
+```
+
+
+```{r}
+temp_data <- data_scores[1,] %>% #working on the selected row
+    dplyr::select(-c(lat, long, coastwide_coservation)) %>% 
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+temp_data
+
+temp_plot <- ggplot(data = temp_data, aes(x = category, y = score))+
+  geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+
+plot_fig <- image_graph(width = 100, height = 75, res = 96)
+  
+  #final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
+final <- image_composite(fig, plot_fig, offset = "+75+150")
+  
+print(final)
+
+
 
 ```
 
