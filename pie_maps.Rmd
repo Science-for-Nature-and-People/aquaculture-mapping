@@ -436,16 +436,16 @@ leaflet_select
 ```{r saving leaflet image}
 #trying to save leaflet output as an image
 
-# library(plotly)
-# library(htmlwidgets)
-# library(webshot)
-# library(mapview)
-# 
-# saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
-# 
-# mapshot(leaflet_minichart_bar, file = "leaflet_test.png", 
-#   remove_controls = c("zoomControl", "layersControl", "homeButton",
-#   "scaleBar"))
+library(plotly)
+library(htmlwidgets)
+library(webshot)
+library(mapview)
+
+saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
+
+mapshot(leaflet_minichart_bar, file = "leaflet_test.png",
+  remove_controls = c("zoomControl", "layersControl", "homeButton",
+  "scaleBar"))
 
 ```
 
@@ -549,7 +549,6 @@ station.annotations = station.points %>%
 ggplot(station.points) +
   xlim(c(-13598000, -13563500)) +
   annotation_map_tile(zoom = 13) +
-  geom_sf(shape = NA, color = stations)+
   station.annotations
 
   
