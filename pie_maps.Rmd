@@ -446,11 +446,13 @@ leaflet_select
 # library(webshot)
 # library(mapview)
 # 
+# # first method is using webshot()
 # saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
 # 
 # webshot("temp.html", file = "leaflet_test.png",
 #         cliprect = "viewport")
 # 
+# # another method is using mapshot()
 # mapshot(leaflet_minichart_bar, file = "leaflet_test.png",
 #   remove_controls = c("zoomControl", "layersControl", "homeButton",
 #   "scaleBar"))
@@ -548,8 +550,8 @@ station.annotations = station.points %>%
 
 #create map
 ggplot(station.points) +
-  xlim(c(-13598000, -13563500)) +
-  annotation_map_tile(zoom = 13) +
+  #xlim(c(-13598000, -13563500)) +
+  #annotation_map_tile(zoom = 13) +
   station.annotations
 
   
@@ -557,6 +559,8 @@ ggplot(station.points) +
 
 
 ```{r}
+world_map <- map_data("world") # I would like this example to work with sf eventually
+
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
   drop_na("long") %>% 
@@ -575,7 +579,10 @@ test_plots <- bar_data %>%
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
-                       geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+                       geom_bar(width = 1, stat = "identity", show.legend = FALSE) +
+                       theme(axis.title.x=element_blank(),
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank())
            )
          )
 
@@ -599,9 +606,10 @@ estuary_annotation <- plot_points %>%
 
 # make ggplot and add list of notations
 ggplot(plot_points) +
-  xlim(c(-13598000, -13563500)) +
-  annotation_map_tile(zoom = 13) +
-  geom_sf(shape = NA) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  #coord_sf(xlim = c(-120, -115))+
+  #annotation_map_tile(zoom = 13) +
   estuary_annotation
 
 ```
