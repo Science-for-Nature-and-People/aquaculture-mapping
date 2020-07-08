@@ -441,11 +441,12 @@ leaflet_select
 ```{r saving leaflet image}
 #trying to save leaflet output as an image
 
-# library(plotly)
-# library(htmlwidgets)
-# library(webshot)
-# library(mapview)
-# 
+library(plotly)
+library(htmlwidgets)
+library(webshot)
+library(mapview)
+
+
 # # first method is using webshot()
 # saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
 # 
@@ -550,7 +551,7 @@ station.annotations = station.points %>%
 
 #create map
 ggplot(station.points) +
-  #xlim(c(-13598000, -13563500)) +
+  xlim(c(-13598000, -13563500)) +
   #annotation_map_tile(zoom = 13) +
   station.annotations
 
@@ -559,7 +560,9 @@ ggplot(station.points) +
 
 
 ```{r}
-world_map <- map_data("world") # I would like this example to work with sf eventually
+library(mapdata)
+
+cropped_map  <- map_data("world", xlim = c(-124.5, -117.5), ylim = c(33, 48.5))
 
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
@@ -567,10 +570,10 @@ bar_data <-  data_scores %>%
   dplyr::select(-coastwide_coservation) %>% 
   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
-#normal ggplot for reference
-ggplot(data = bar_data, aes(x = category, y = score))+
-  geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
-  facet_grid(~estuary_or_subbasin)
+# #normal ggplot for reference
+# ggplot(data = bar_data, aes(x = category, y = score))+
+#   geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
+#   facet_grid(~estuary_or_subbasin)
 
 # make a separate ggplot for each estuary:
 test_plots <- bar_data %>% 
@@ -590,6 +593,7 @@ test_plots <- bar_data %>%
 plot_points <- estuary_sf %>% 
   select(estuary_or_subbasin, geometry)
 
+
 plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) %>%
   st_transform(3857)
 
@@ -599,17 +603,19 @@ estuary_annotation <- plot_points %>%
   st_drop_geometry() %>% #removes geometry from sf object
   left_join(test_plots, by = "estuary_or_subbasin") %>% 
   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
-                           ~annotation_custom(ggplotGrob(..3),
-                                              xmin = ..1 - 2000, xmax = ..1 + 2000,
-                                              ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
+                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+                                              xmin = ..1, xmax = ..1 + 5, # ..1 refers to X
+                                              ymin = ..2, ymax = ..2 + 5))) %>% # ..2 refers to Y
   pull(annotation)
 
 # make ggplot and add list of notations
 ggplot(plot_points) +
+  #geom_polygon(data = cropped_map, aes(x = long, y = lat, group = group), fill="lightgray", colour = "white")+
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
-  #coord_sf(xlim = c(-120, -115))+
-  #annotation_map_tile(zoom = 13) +
+  # xlim(c(-180, 60))+
+  # coord_sf(crs = 4326, xlim = c(-13598000, -13563500), expand = FALSE)+
+  # annotation_map_tile(type = "osm", zoom = 13) +
   estuary_annotation
 
 ```
