@@ -29,7 +29,14 @@ library(leaflet)
 library(leafpop)
 library(RColorBrewer)
 library(leaflet.minicharts)
-
+library(magick)
+library(ggmap)
+library(maps)
+#remotes::install_github("flowwest/CDECRetrieve")
+library(CDECRetrieve)
+library(purrr)
+library(zoo)
+library(ggspatial)
 
 ```
 
@@ -381,9 +388,7 @@ leaflet_minichart_ecol <- leaflet(pie_data) %>%
 
 leaflet_minichart_ecol
 
-
-
-#Adding a selector box to leaflet: unfortunately, the minichart function does not support the group argument
+#Adding a selector box to leaflet: unfortunately, the minichart function does not support the group argument but I was able to get basically the same result.
 
 leaflet_points <- pie_data %>% #convert zeros to NAs so they do not get plotted on map
   mutate(ecology = na_if(ecology, "0")) %>% 
@@ -436,16 +441,19 @@ leaflet_select
 ```{r saving leaflet image}
 #trying to save leaflet output as an image
 
-library(plotly)
-library(htmlwidgets)
-library(webshot)
-library(mapview)
-
-saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
-
-mapshot(leaflet_minichart_bar, file = "leaflet_test.png",
-  remove_controls = c("zoomControl", "layersControl", "homeButton",
-  "scaleBar"))
+# library(plotly)
+# library(htmlwidgets)
+# library(webshot)
+# library(mapview)
+# 
+# saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
+# 
+# webshot("temp.html", file = "leaflet_test.png",
+#         cliprect = "viewport")
+# 
+# mapshot(leaflet_minichart_bar, file = "leaflet_test.png",
+#   remove_controls = c("zoomControl", "layersControl", "homeButton",
+#   "scaleBar"))
 
 ```
 
@@ -485,13 +493,6 @@ SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some
 ```
 
 ```{r online example code}
-
-#remotes::install_github("flowwest/CDECRetrieve")
-library(CDECRetrieve)
-library(purrr)
-library(zoo)
-#install.packages("ggspatial")
-library(ggspatial)
 
 # CDEC station codes to retrieve data for
 stations = c('BDL', 'BLL', 'CSE', 'FLT', 'GOD', 'GZL', 'HON', 'HUN',
@@ -608,57 +609,30 @@ ggplot(plot_points) +
 Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
 
 ```{r}
-#install.packages("magick")
-library(magick)
-library(ggmap)
-library(maps)
-
-#base map
 mp <-  NULL
 mapWorld <- borders("world", colour="gray70", fill="gray70") 
 
 fig <- image_graph(width = 850, height = 550, res = 96)
-ggplot() + mapWorld
+ggplot()+ 
+  mapWorld+
+  coord_cartesian(xlim = c(-120, -115), ylim = c(30, 34.5)) #setting zoom
 
-for( i in 1:10){
-  
-  temp_data <- data_scores[i,] %>% #working on the selected row
-    dplyr::select(-c(lat, long, coastwide_coservation)) %>% 
-    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
-
-  temp_plot <- ggplot(temp_data, aes(x = "", y = category, fill = score))+
-  geom_bar(width = 1, stat = "identity", show.legend = FALSE)
-  
-  plot_fig <- image_graph(width = 100, height = 75, res = 96)
-  
-  #final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
-  final <- image_composite(fig, plot_fig, offset = "+75+150")
-  
-  print(final)
-  
-}
-
-final
-
-```
-
-
-```{r}
 temp_data <- data_scores[1,] %>% #working on the selected row
     dplyr::select(-c(lat, long, coastwide_coservation)) %>% 
     pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
-temp_data
 
 temp_plot <- ggplot(data = temp_data, aes(x = category, y = score))+
-  geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+  geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
+  theme_bw()+
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.title.y = element_blank())
 
-plot_fig <- image_graph(width = 100, height = 75, res = 96)
+barfig1 <- image_graph(width = 100, height = 75, res = 72)
+temp_plot
   
-  #final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
-final <- image_composite(fig, plot_fig, offset = "+75+150")
+# final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
+final <- image_composite(fig, barfig1, offset = "+425+275") #offset is in pixels so I think they will need to be manually placed
   
 print(final)
-
 
 
 ```
