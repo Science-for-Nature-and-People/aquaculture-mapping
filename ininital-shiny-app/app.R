@@ -36,7 +36,7 @@ ui <- fluidPage(
     sidebarPanel("Score Widget",
                  selectInput(inputId = "aqua_score",
                              label = "Choose Score",
-                             choices = unique(SNAPP_estuary_points$score_type)
+                             choices = c(Ecology = "Ecol1", Restoration = "Resto1", Harvest = "Harvest1", "Community Engagement" = "Comm1")
                  ),
                  sliderInput(inputId = "aqua_score_range",
                              label = "Choose Score Range",
@@ -57,8 +57,8 @@ server <- function(inputs, outputs) {
   # Filter the data
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
-      filter(score_type %in% (inputs$aqua_score)) %>%
-      filter(score %in% (inputs$aqua_score_range))
+      filter(score_type %in% (inputs$aqua_score)) #%>%
+     # filter(score %in% (inputs$aqua_score_range))
   })
   
   # Render the map
