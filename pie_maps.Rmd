@@ -355,7 +355,8 @@ leaflet_minichart_bar <- leaflet(pie_data) %>%
   addMinicharts(lng = pie_data$Longitude, 
                 lat = pie_data$Latitude,
                 chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")],
-                colorPalette = bar_cols)
+                colorPalette = bar_cols,
+                width = 45, height = 45)
 
 leaflet_minichart_bar
 
@@ -567,7 +568,7 @@ cropped_map  <- map_data("world", xlim = c(-124.5, -117.5), ylim = c(33, 48.5))
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
   drop_na("long") %>% 
-  dplyr::select(-coastwide_coservation) %>% 
+  select(-coastwide_coservation) %>%  
   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
 # #normal ggplot for reference
@@ -582,10 +583,16 @@ test_plots <- bar_data %>%
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
-                       geom_bar(width = 1, stat = "identity", show.legend = FALSE) +
-                       theme(axis.title.x=element_blank(),
+                       geom_bar(width = 5, stat = "identity", show.legend = FALSE) +
+                       theme(axis.title.x=element_blank(), 
                              axis.text.x=element_blank(),
-                             axis.ticks.x=element_blank())
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                             panel.background = element_rect(fill = "transparent",colour = NA),
+                             plot.background = element_rect(fill = "transparent",colour = NA))
            )
          )
 
@@ -593,9 +600,8 @@ test_plots <- bar_data %>%
 plot_points <- estuary_sf %>% 
   select(estuary_or_subbasin, geometry)
 
-
-plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) %>%
-  st_transform(3857)
+plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) #%>%
+  # st_transform(3857)
 
 # turn the plots into annotations: 
 estuary_annotation <- plot_points %>% 
@@ -613,7 +619,8 @@ ggplot(plot_points) +
   #geom_polygon(data = cropped_map, aes(x = long, y = lat, group = group), fill="lightgray", colour = "white")+
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
-  # xlim(c(-180, 60))+
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
   # coord_sf(crs = 4326, xlim = c(-13598000, -13563500), expand = FALSE)+
   # annotation_map_tile(type = "osm", zoom = 13) +
   estuary_annotation
@@ -643,11 +650,9 @@ temp_plot <- ggplot(data = temp_data, aes(x = category, y = score))+
 barfig1 <- image_graph(width = 100, height = 75, res = 72)
 temp_plot
   
-# final <- image_composite(fig, plot_fig, offset = "+",temp_data$long,"+",temp_data$lat)
 final <- image_composite(fig, barfig1, offset = "+425+275") #offset is in pixels so I think they will need to be manually placed
   
 print(final)
-
 
 ```
 
