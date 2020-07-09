@@ -29,6 +29,14 @@ library(leaflet)
 library(leafpop)
 library(RColorBrewer)
 library(leaflet.minicharts)
+library(magick)
+library(ggmap)
+library(maps)
+#remotes::install_github("flowwest/CDECRetrieve")
+library(CDECRetrieve)
+library(purrr)
+library(zoo)
+library(ggspatial)
 
 ```
 
@@ -347,7 +355,8 @@ leaflet_minichart_bar <- leaflet(pie_data) %>%
   addMinicharts(lng = pie_data$Longitude, 
                 lat = pie_data$Latitude,
                 chartdata = pie_data[,c("ecology", "restoration", "harvest", "commercial")],
-                colorPalette = bar_cols)
+                colorPalette = bar_cols,
+                width = 45, height = 45)
 
 leaflet_minichart_bar
 
@@ -367,31 +376,86 @@ leaflet_minichart_bar_zoom
 ```
  
 ```{r leaflet minichart with single values}
-#can also represent single values as a weighted point, might be good for use in a Shiny App
 
+#can also represent single values as a weighted point, might be good for use in a Shiny App
 leaflet_minichart_ecol <- leaflet(pie_data) %>%
   addTiles() %>% 
   addMinicharts(
     lng = pie_data$Longitude, lat = pie_data$Latitude,
-    chartdata = pie_data$ecology,
+    chartdata = pie_data$ecol,
     showLabels = TRUE,
     width = 45
   )
 
 leaflet_minichart_ecol
+
+#Adding a selector box to leaflet: unfortunately, the minichart function does not support the group argument but I was able to get basically the same result.
+
+leaflet_points <- pie_data %>% #convert zeros to NAs so they do not get plotted on map
+  mutate(ecology = na_if(ecology, "0")) %>% 
+  mutate(restoration = na_if(restoration, "0")) %>%
+  mutate(harvest = na_if(harvest, "0")) %>% 
+  mutate(commercial = na_if(commercial, "0"))
+
+point_weight = 20
+
+leaflet_select <- leaflet(leaflet_points) %>%
+  addTiles() %>% 
+  addProviderTiles("Esri.WorldGrayCanvas") %>% #changing background
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$ecology, 
+                   group = "ecology", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$ecology,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>%
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$restoration, 
+                   group = "restoration", 
+                   stroke = F, 
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$restoration,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$harvest, 
+                   group = "harvest", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$harvest,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, point_weight*leaflet_points$commercial, 
+                   group = "commercial", 
+                   stroke = F,
+                   fillOpacity = 1,
+                   color = "darkcyan",
+                   label = leaflet_points$commercial,
+                   labelOptions = labelOptions(noHide = T, textOnly = TRUE, direction = "center", style = list(color = "white"))) %>% 
+  addLayersControl(
+    baseGroups = c("ecology", "restoration", "harvest", "commercial"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+leaflet_select
+
 ```
 
 ```{r saving leaflet image}
 #trying to save leaflet output as an image
 
-# library(plotly)
-# library(htmlwidgets)
-# library(webshot)
-# library(mapview)
-# 
+library(plotly)
+library(htmlwidgets)
+library(webshot)
+library(mapview)
+
+
+# # first method is using webshot()
 # saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
 # 
-# mapshot(leaflet_minichart_bar, file = "leaflet_test.png", 
+# webshot("temp.html", file = "leaflet_test.png",
+#         cliprect = "viewport")
+# 
+# # another method is using mapshot()
+# mapshot(leaflet_minichart_bar, file = "leaflet_test.png",
 #   remove_controls = c("zoomControl", "layersControl", "homeButton",
 #   "scaleBar"))
 
@@ -433,13 +497,6 @@ SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some
 ```
 
 ```{r online example code}
-
-#remotes::install_github("flowwest/CDECRetrieve")
-library(CDECRetrieve)
-library(purrr)
-library(zoo)
-#install.packages("ggspatial")
-library(ggspatial)
 
 # CDEC station codes to retrieve data for
 stations = c('BDL', 'BLL', 'CSE', 'FLT', 'GOD', 'GZL', 'HON', 'HUN',
@@ -496,24 +553,29 @@ station.annotations = station.points %>%
 #create map
 ggplot(station.points) +
   xlim(c(-13598000, -13563500)) +
-  annotation_map_tile(zoom = 13) +
-  geom_sf(shape = NA) +
+  #annotation_map_tile(zoom = 13) +
   station.annotations
 
+  
 ```
 
 
 ```{r}
+library(mapdata)
+
+cropped_map  <- map_data("world", xlim = c(-124.5, -117.5), ylim = c(33, 48.5))
+
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
   drop_na("long") %>% 
-  dplyr::select(-coastwide_coservation) %>% 
+  #select(-coastwide_coservation) %>%  
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
-#normal ggplot for reference
-ggplot(data = bar_data, aes(x = category, y = score))+
-  geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
-  facet_grid(~estuary_or_subbasin)
+# #normal ggplot for reference
+# ggplot(data = bar_data, aes(x = category, y = score))+
+#   geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
+#   facet_grid(~estuary_or_subbasin)
 
 # make a separate ggplot for each estuary:
 test_plots <- bar_data %>% 
@@ -522,7 +584,18 @@ test_plots <- bar_data %>%
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
-                       geom_bar(width = 1, stat = "identity", show.legend = FALSE)
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"))
+                          
            )
          )
 
@@ -530,8 +603,8 @@ test_plots <- bar_data %>%
 plot_points <- estuary_sf %>% 
   select(estuary_or_subbasin, geometry)
 
-plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) %>%
-  st_transform(3857)
+plot_points <- st_as_sf(plot_points, crs = 4326, coords = c("longitude", "latitude")) #%>%
+  # st_transform(3857)
 
 # turn the plots into annotations: 
 estuary_annotation <- plot_points %>% 
@@ -539,14 +612,50 @@ estuary_annotation <- plot_points %>%
   st_drop_geometry() %>% #removes geometry from sf object
   left_join(test_plots, by = "estuary_or_subbasin") %>% 
   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
-                           ~annotation_custom(ggplotGrob(..3),
-                                              xmin = ..1 - 2000, xmax = ..1 + 2000,
-                                              ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
+                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+                                              xmin = ..1 - 1.5, xmax = ..1 + 1.5, # ..1 refers to X
+                                              ymin = ..2 - 1, ymax = ..2 + 1))) %>% # ..2 refers to Y
   pull(annotation)
 
-
-
 # make ggplot and add list of notations
+ggplot(plot_points) +
+  #geom_polygon(data = cropped_map, aes(x = long, y = lat, group = group), fill="lightgray", colour = "white")+
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  # coord_sf(crs = 4326, xlim = c(-13598000, -13563500), expand = FALSE)+
+  # annotation_map_tile(type = "osm", zoom = 13) +
+  estuary_annotation
+
+```
+
+Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
+
+```{r}
+mp <-  NULL
+mapWorld <- borders("world", colour="gray70", fill="gray70") 
+
+fig <- image_graph(width = 850, height = 550, res = 96)
+ggplot()+ 
+  mapWorld+
+  coord_cartesian(xlim = c(-120, -115), ylim = c(30, 34.5)) #setting zoom
+
+temp_data <- data_scores[1,] %>% #working on the selected row
+    dplyr::select(-c(lat, long, coastwide_coservation)) %>% 
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+
+temp_plot <- ggplot(data = temp_data, aes(x = category, y = score))+
+  geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
+  theme_bw()+
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.title.y = element_blank())
+
+barfig1 <- image_graph(width = 100, height = 75, res = 72)
+temp_plot
+  
+final <- image_composite(fig, barfig1, offset = "+425+275") #offset is in pixels so I think they will need to be manually placed
+  
+print(final)
 
 ```
 
