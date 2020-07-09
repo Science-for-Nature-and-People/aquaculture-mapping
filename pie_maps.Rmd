@@ -563,8 +563,6 @@ ggplot(station.points) +
 ```{r}
 library(mapdata)
 
-cropped_map  <- map_data("world", xlim = c(-124.5, -117.5), ylim = c(33, 48.5))
-
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
   drop_na("long") %>% 
@@ -619,7 +617,6 @@ estuary_annotation <- plot_points %>%
 
 # make ggplot and add list of notations
 ggplot(plot_points) +
-  #geom_polygon(data = cropped_map, aes(x = long, y = lat, group = group), fill="lightgray", colour = "white")+
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   xlim(c(-130, -115))+
@@ -629,6 +626,150 @@ ggplot(plot_points) +
   estuary_annotation
 
 ```
+
+Trying ggrepel to prevent overlap using ggrepel::repel_boxes() following example from [here](http://zachcp.org/blog/2016/ggrepelmaps/) and [here](https://github.com/slowkow/ggrepel/issues/24)
+
+```{r}
+bar_data <-  data_scores %>%
+  drop_na("long") %>% 
+  #select(-coastwide_coservation) %>%  
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+  pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+
+point_data <-  data_scores %>%
+  drop_na("long") %>% 
+  select(estuary_or_subbasin, lat, long)
+
+library(ggrepel)
+library(ggimage)
+
+#' Given a Set of Points and Box sizes, find locations
+#' Written by @zachp, updated by @slowkow
+findboxes <- function(
+  df, xcol, ycol,
+  box_padding_x, box_padding_y,
+  point_padding_x, point_padding_y,
+  xlim, ylim,
+  force = 1e-7, maxiter = 20000
+) {
+
+  # x and y posiitons as a dataframe
+  posdf <- df[c(xcol, ycol)]
+
+  # returnd a df where columns are points
+  boxdf <- apply(posdf, 1, function(row) {
+    xval <- row[xcol]
+    yval <- row[ycol]
+    return(c(
+      xval - box_padding_x / 2,
+      yval - box_padding_y / 2,
+      xval + box_padding_x / 2,
+      yval + box_padding_y / 2
+    ))
+  })
+  # columns are x1,y1,x2,y2
+  boxmatrix <- as.matrix(t(boxdf))
+
+  moved <- ggrepel:::repel_boxes(
+    data_points = as.matrix(posdf),
+    point_padding_x = point_padding_x,
+    point_padding_y = point_padding_y,
+    boxes = boxmatrix,
+    xlim = xlim,
+    ylim = ylim,
+    hjust = 0.5,
+    vjust = 0.5,
+    force = force,
+    maxiter = maxiter
+  )
+
+  finaldf <- cbind(posdf, moved)
+  names(finaldf) <- c("x1", "y1", "x2", "y2")
+  return(finaldf)
+}
+
+# data frame with two x and two y values
+df1 <- findboxes(point_data,
+  xcol = "long", ycol = "lat",
+  box_padding_x = Reduce("-", rev(range(point_data$lat))) * 1.75,
+  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.75,
+  point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
+  point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
+  force = 1e-10, #force = repulsion
+  xlim = c(-130, -115),
+  ylim = c(30, 53)
+)
+
+#renaming first column to match original bar_data df
+colnames(df1)[1] <- "long"
+
+#adding offset values to bar_data
+bar_data_offset <- point_data %>%
+  left_join(df1, by = "long") %>%
+  select(-c(y1)) %>% #removing repeated lat values
+  rename(lat_offset = y2, long_offset = x2) #renaming to be more descriptive
+
+# taking offset lat long and creating a geometry
+offset_points <- st_as_sf(bar_data_offset, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
+  select(estuary_or_subbasin, geometry)
+
+# make a separate ggplot for each estuary:
+test_plots <- bar_data %>% 
+  group_by(estuary_or_subbasin) %>% 
+  nest() %>%
+  mutate(plot = map2(data, estuary_or_subbasin,
+                     ~ggplot(data = .x) +
+                       aes(x = category, y = score) +
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"))
+                          
+           )
+         )
+
+# turn the plots into annotations: 
+estuary_annotation <- offset_points %>% 
+  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+  st_drop_geometry() %>% #removes geometry from sf object
+  left_join(test_plots, by = "estuary_or_subbasin") %>% 
+  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+                                              xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
+                                              ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
+  pull(annotation)
+
+# make ggplot and add list of notations
+ggplot(offset_points) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+  geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
+  geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
+  estuary_annotation
+
+# #zoom
+# ggplot(offset_points) +
+#   geom_sf(data = us_boundaries()) +
+#   geom_sf(data = canada) + 
+#   xlim(c(-125, -121.5))+
+#   ylim(c(45, 49.5))+
+#   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+#   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
+#   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
+#   estuary_annotation
+
+```
+
 
 Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
 
