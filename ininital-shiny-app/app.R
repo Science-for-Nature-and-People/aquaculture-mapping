@@ -18,6 +18,7 @@ library(leaflet)
 
 # Doing the data processing
 # Would be better to save/cache the data somewhere and read it in instead
+#palette_explorer() # can be used to find better color palettes for the map. 
 
 
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>%
@@ -65,7 +66,7 @@ server <- function(inputs, outputs) {
   outputs$Score_Map <- renderLeaflet({
     
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()["score"]) +
-      tm_dots(labels = "Name", col = "score", n = 5, style = "pretty", size = 0.25) +
+      tm_dots(labels = "Name", col = "score", n = 5, breaks = c(0.2, 0.4, 0.6, 0.8, 1), style = "pretty", size = 0.25, palette = "Purples") +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
     
