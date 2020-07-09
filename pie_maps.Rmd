@@ -568,7 +568,8 @@ cropped_map  <- map_data("world", xlim = c(-124.5, -117.5), ylim = c(33, 48.5))
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
   drop_na("long") %>% 
-  select(-coastwide_coservation) %>%  
+  #select(-coastwide_coservation) %>%  
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
 # #normal ggplot for reference
@@ -583,16 +584,17 @@ test_plots <- bar_data %>%
   mutate(plot = map2(data, estuary_or_subbasin,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
-                       geom_bar(width = 5, stat = "identity", show.legend = FALSE) +
-                       theme(axis.title.x=element_blank(),
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
                              axis.text.x=element_blank(),
                              axis.ticks.x=element_blank(),
                              axis.title.y=element_blank(),
                              axis.text.y=element_blank(),
                              axis.ticks.y=element_blank(),
-                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                             panel.background = element_rect(fill = "transparent",colour = NA),
-                             plot.background = element_rect(fill = "transparent",colour = NA))
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"))
                           
            )
          )
@@ -611,8 +613,8 @@ estuary_annotation <- plot_points %>%
   left_join(test_plots, by = "estuary_or_subbasin") %>% 
   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
                            ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
-                                              xmin = ..1, xmax = ..1 + 5, # ..1 refers to X
-                                              ymin = ..2, ymax = ..2 + 5))) %>% # ..2 refers to Y
+                                              xmin = ..1 - 1.5, xmax = ..1 + 1.5, # ..1 refers to X
+                                              ymin = ..2 - 1, ymax = ..2 + 1))) %>% # ..2 refers to Y
   pull(annotation)
 
 # make ggplot and add list of notations
