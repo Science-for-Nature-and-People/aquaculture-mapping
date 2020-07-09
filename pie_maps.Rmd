@@ -583,16 +583,17 @@ test_plots <- bar_data %>%
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
                        geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
-                       theme(axis.title.x=element_blank(), #removing all labels
+                       theme(axis.title.x=element_blank(), #removing labels
                              axis.text.x=element_blank(),
                              axis.ticks.x=element_blank(),
                              axis.title.y=element_blank(),
                              axis.text.y=element_blank(),
                              axis.ticks.y=element_blank(),
                              panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
-                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making backgrounds transparent
                              plot.background = element_rect(fill = "transparent",colour = NA),
-                             plot.margin = unit(c(0, 0, 0, 0), "null"))
+                             plot.margin = unit(c(0, 0, 0, 0), "null"), #removing margins
+                             axis.line = element_line() )#adding in black axes lines
                           
            )
          )
@@ -730,7 +731,8 @@ test_plots <- bar_data %>%
                              panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
                              panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
                              plot.background = element_rect(fill = "transparent",colour = NA),
-                             plot.margin = unit(c(0, 0, 0, 0), "null"))
+                             plot.margin = unit(c(0, 0, 0, 0), "null"),
+                             axis.line = element_line())
                           
            )
          )
