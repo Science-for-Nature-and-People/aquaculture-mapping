@@ -65,7 +65,7 @@ server <- function(inputs, outputs) {
   # Render the map
   outputs$Score_Map <- renderLeaflet({
     
-    SNAPP_estuary_map_points <- tm_shape(estuary_shiny()["score"]) +
+    SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
       tm_dots(col = "score", style = "fixed", n = 4, breaks = c(0, 0.25, 0.5, 0.75, 1), labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), size = 0.25, palette = "Purples", title = "Score") +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
