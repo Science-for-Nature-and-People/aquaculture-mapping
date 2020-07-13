@@ -692,11 +692,11 @@ findboxes <- function(
 # data frame with two x and two y values
 df1 <- findboxes(point_data,
   xcol = "long", ycol = "lat",
-  box_padding_x = Reduce("-", rev(range(point_data$lat))) * 1.75,
-  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.75,
+  box_padding_x = 15,
+  box_padding_y = 15,
   point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
   point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
-  force = 1e-10, #force = repulsion
+  force = 1e-2, #force = repulsion
   xlim = c(-130, -115),
   ylim = c(30, 53)
 )
@@ -769,6 +769,170 @@ ggplot(offset_points) +
 #   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
 #   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
 #   estuary_annotation
+
+```
+
+Trying example from above but choosing an offset for long
+
+```{r}
+
+# Making two datasets with selecting sites from every other row
+bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
+  drop_na("long") %>% 
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+  mutate(long_offset = long - 2)
+
+bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
+  drop_na("long") %>% 
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+  mutate(long_offset = long + 2)
+
+#merging together
+merged_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
+  mutate(lat_offset = lat)
+
+# taking offset lat long and creating a geometry
+offset_points <- st_as_sf(merged_offset, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
+  select(estuary_or_subbasin, geometry)
+
+# make a separate ggplot for each estuary:
+test_plots <- bar_data %>% 
+  group_by(estuary_or_subbasin) %>% 
+  nest() %>%
+  mutate(plot = map2(data, estuary_or_subbasin,
+                     ~ggplot(data = .x) +
+                       aes(x = category, y = score) +
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"),
+                             axis.line = element_line())
+                          
+           )
+         )
+
+# turn the plots into annotations: 
+estuary_annotation <- offset_points %>% 
+  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+  st_drop_geometry() %>% #removes geometry from sf object
+  left_join(test_plots, by = "estuary_or_subbasin") %>% 
+  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+                                              xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
+                                              ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
+  pull(annotation)
+
+# make ggplot and add list of notations
+ggplot(offset_points) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  geom_segment(data = merged_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+  geom_point(data = merged_offset, aes(long, lat), color = "black") +
+  geom_point(data = merged_offset, aes(long_offset, lat_offset), color = "black") +
+  estuary_annotation
+
+
+```
+
+Trying manual offset put through the geom_boxes function
+
+```{r}
+
+# Making two datasets with selecting sites from every other row
+bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
+  drop_na("long") %>% 
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+  mutate(long_offset = long - 2)
+
+bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
+  drop_na("long") %>% 
+  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+  mutate(long_offset = long + 2)
+
+#merging together
+manual_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
+  mutate(lat_offset = lat)
+
+function_offset <- findboxes(manual_offset,
+  xcol = "long_offset", ycol = "lat_offset",
+  box_padding_x = Reduce("-", rev(range(point_data$lat))) * 1,
+  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.25,
+  point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
+  point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
+  force = 1e-3, #force = repulsion
+  xlim = c(-130, -115),
+  ylim = c(30, 53)
+)
+
+function_offset$estuary_or_subbasin <- manual_offset$estuary_or_subbasin
+  
+function_offset_clean <- function_offset %>% 
+  rename(lat_offset = y2, long_offset = x2) %>% 
+  select(-c(x1, y1))
+
+#adding offset values to bar_data
+final_offset <- manual_offset %>% 
+  dplyr::select(-c(lat_offset, long_offset)) %>% 
+  merge(function_offset_clean, by = "estuary_or_subbasin")
+
+# taking offset lat long and creating a geometry
+final_offset_points <- st_as_sf(function_offset_clean, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
+  select(estuary_or_subbasin, geometry)
+
+# make a separate ggplot for each estuary:
+test_plots <- bar_data %>% 
+  group_by(estuary_or_subbasin) %>% 
+  nest() %>%
+  mutate(plot = map2(data, estuary_or_subbasin,
+                     ~ggplot(data = .x) +
+                       aes(x = category, y = score) +
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"),
+                             axis.line = element_line())
+                          
+           )
+         )
+
+# turn the plots into annotations: 
+estuary_annotation <- final_offset_points %>% 
+  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+  st_drop_geometry() %>% #removes geometry from sf object
+  left_join(test_plots, by = "estuary_or_subbasin") %>% 
+  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+                                              xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
+                                              ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
+  pull(annotation)
+
+# make ggplot and add list of notations
+ggplot(final_offset_points) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  geom_segment(data = final_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+  geom_point(data = final_offset, aes(long, lat), color = "black") +
+  geom_point(data = final_offset, aes(long_offset, lat_offset), color = "black") +
+  estuary_annotation
+
 
 ```
 
