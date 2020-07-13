@@ -21,10 +21,12 @@ library(leaflet)
 #palette_explorer() # can be used to find better color palettes for the map. 
 
 
-SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>%
-  mutate("Ecology" = Ecol1, "Restoration" = Resto1, "Harvest" = Harvest1, "Community" = Comm1) %>%
-  select(-NCEASmap, - Latitude, -Longitude) %>%
-  gather(score_type, score, -Name, -geometry, -Ecology, -Restoration, -Harvest, -Community)
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
+  st_transform(crs = 3310) %>%
+  st_centroid(geometry) %>%
+  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1) %>%
+  select(-NCEAM) %>%
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community)
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
@@ -38,18 +40,18 @@ ui <- fluidPage(
     sidebarPanel("Score Widget",
                  selectInput(inputId = "aqua_score",
                              label = "Select Score",
-                             choices = c(Ecology = "Ecol1", Restoration = "Resto1", Harvest = "Harvest1", "Community" = "Comm1")
+                             choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
                  sliderInput(inputId = "aqua_score_range",
                              label = "Select Score Range",
                              min = 0, max = 1, value = c(0,1), step = 0.25, ticks = TRUE
-                             )
+                 )
                  
     ),
     mainPanel("Output Map",
               leafletOutput(outputId = "Score_Map", 
                             width = 550, height = 800
-                            ))
+              ))
   )
 )
 
@@ -60,7 +62,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) #%>%
-      #filter(score %in% (inputs$aqua_score_range))
+    #filter(score %in% (inputs$aqua_score_range))
   })
   
   # Render the map
