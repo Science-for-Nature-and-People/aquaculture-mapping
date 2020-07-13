@@ -8,12 +8,17 @@ library(shinythemes)
 library(shinydashboard)
 library(sf)
 library(here)
+library(leaflet)
+library(tmap)
+library(tmaptools)
 
 SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "NEAR_Final_SNAPP_Estuary_Polygons_060420") %>%
-  select(-NCEAM, -Shape_Leng, -Shape_Area)
+  select(-NCEAM)
 
+  gather(score_field, score, -Estuary_Na, -geometry)
 polygons_gather <- SNAPP_estuary_polygons %>%
-  gather(score_field, score, -OBJECTID, -Estuary_Na)
+
+basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
 ## Beginning the App
 
@@ -27,7 +32,7 @@ ui <- fluidPage(
                  )
     ),
     mainPanel("Output Map",
-              plotOutput(outputId = "Score_Map"))
+              leafletOutput(outputId = "Score_Map"))
     
   )
   
@@ -40,9 +45,11 @@ server <- function(inputs, outputs) {
       filiter(score_field %in% (inputs$aqua_score))
   })
   
-  outputs$Score_Map <- renderPlot({
-    ggplot() +
-      geom_sf(data = estuary_polygons_shiny()["score"], aes(fill = score)) 
+  outputs$Score_Map <- renderLeaflet({
+    SNAPP_estuary_map_polygons <- tm_shape(estuary_polygons_shiny()) +
+      tm_fill(col = "score") +
+      basemap_streets
+    tmap_leaflet(SNAPP_estuary_map_polygons)
     
     
   })
