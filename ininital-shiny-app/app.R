@@ -39,7 +39,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel("Score Widget",
                  selectInput(inputId = "aqua_score",
-                             label = "Select Score",
+                             label = "Conservation Categories",
                              choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
                  
@@ -50,12 +50,12 @@ ui <- fluidPage(
                  
                  
                  sliderInput(inputId = "aqua_score_range",
-                             label = "Select Score Range",
+                             label = "Category Score Range",
                              min = -1, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
                  )
                  
     ),
-    mainPanel("Output Map",
+    mainPanel("Map of Estuaries for Conservation Aquaculture",
               leafletOutput(outputId = "Score_Map", 
                             width = 550, height = 800
               ))
