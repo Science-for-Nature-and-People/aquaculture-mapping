@@ -48,7 +48,7 @@ ui <- fluidPage(
                              choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
                  
-                 sliderInput(inputId = "aqua_score_range",
+                 sliderInput(inputId = "slider_score_range",
                              label = "Score Range",
                              min = -1, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
                  )
@@ -69,7 +69,7 @@ server <- function(inputs, outputs) {
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$slider_select)) %>%
       select(inputs$aqua_score, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
-      filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
+      filter(score >= inputs$slider_score_range[1] & score <= inputs$slider_score_range[2]) 
   })
   
   # Render the map
@@ -83,7 +83,7 @@ server <- function(inputs, outputs) {
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         size = 0.25, 
         palette = "Purples", 
-        title = "Score", 
+        title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community")
         ) +
