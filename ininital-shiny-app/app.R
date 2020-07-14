@@ -26,7 +26,8 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ES
   st_centroid(geometry) %>%
   mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1) %>%
   select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community)
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community) %>%
+  mutate(score_type1 = score_type)
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
@@ -42,6 +43,13 @@ ui <- fluidPage(
                              label = "Select Score",
                              choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
+                 
+                 selectInput(inputId = "slider_select",
+                             label = "select slider score",
+                             choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
+                             ),
+                 
+                 
                  sliderInput(inputId = "aqua_score_range",
                              label = "Select Score Range",
                              min = -1, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
@@ -62,6 +70,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
+     # filter(score_type %in% (inputs$slider_select)) %>%
     filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
