@@ -45,16 +45,22 @@ server <- function(inputs, outputs) {
   estuary_polygons_shiny <- reactive({
     polygons_gather %>%
       filter(score_field %in% (inputs$aqua_score))
+
   })
   
   outputs$Score_Map <- renderLeaflet({
+    
+    sf::st_is_valid(estuary_polygons_shiny())
+    
     SNAPP_estuary_map_polygons <- tm_shape(estuary_polygons_shiny()) +
-      tm_fill(col = "score") +
+      tm_polygons(col = "score") +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_polygons)
     
-    
   })
+  
+  
+  
 }
 
 shinyApp(ui = ui, server = server)
