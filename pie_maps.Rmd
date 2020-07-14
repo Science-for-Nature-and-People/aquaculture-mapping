@@ -692,11 +692,11 @@ findboxes <- function(
 # data frame with two x and two y values
 df1 <- findboxes(point_data,
   xcol = "long", ycol = "lat",
-  box_padding_x = 15,
-  box_padding_y = 15,
+  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .75,
+  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.25,
   point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
   point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
-  force = 1e-2, #force = repulsion
+  force = 1e-4, #force = repulsion
   xlim = c(-130, -115),
   ylim = c(30, 53)
 )
@@ -864,11 +864,11 @@ manual_offset <- bind_rows(bar_data_1, bar_data_2) %>%
 
 function_offset <- findboxes(manual_offset,
   xcol = "long_offset", ycol = "lat_offset",
-  box_padding_x = Reduce("-", rev(range(point_data$lat))) * 1,
-  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.25,
+  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .75,
+  box_padding_y = Reduce("-", rev(range(point_data$long))) * .5,
   point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
   point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
-  force = 1e-3, #force = repulsion
+  force = 1e-2, #force = repulsion
   xlim = c(-130, -115),
   ylim = c(30, 53)
 )
