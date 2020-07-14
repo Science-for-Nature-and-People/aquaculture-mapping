@@ -38,16 +38,15 @@ ui <- fluidPage(
   titlePanel("Conservation Aquaculture Interactive Map"),
   sidebarLayout(
     sidebarPanel(
-                 selectInput(inputId = "aqua_score",
-                             label = "Conservation Categories",
+                  selectInput(inputId = "aqua_score",
+                            label = "Cateory for Color Ramp",
+                            choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
+                 ),
+      
+                 selectInput(inputId = "slider_select",
+                             label = "Select Cateory for Slider",
                              choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
-                 
-                 selectInput(inputId = "slider_select",
-                             label = "select slider score",
-                             choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
-                            ),
-                 
                  
                  sliderInput(inputId = "aqua_score_range",
                              label = "Score Range",
@@ -68,8 +67,8 @@ server <- function(inputs, outputs) {
   # Filter the data
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
-      filter(score_type %in% (inputs$aqua_score)) %>%
-      select(inputs$slider_select, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
+      filter(score_type %in% (inputs$slider_select)) %>%
+      select(inputs$aqua_score, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
       filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
@@ -78,7 +77,7 @@ server <- function(inputs, outputs) {
     
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
       tm_dots(
-        col = inputs$slider_select, 
+        col = inputs$aqua_score, 
         style = "fixed", 
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
