@@ -62,7 +62,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
-    filter(score %in% (inputs$aqua_score_range))
+    filter(score %in% (inputs$aqua_score_range)) # Currently only shows a dot if the number if the score is exactly the same as the number
   })
   
   # Render the map
