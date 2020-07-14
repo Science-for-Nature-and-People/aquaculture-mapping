@@ -46,7 +46,7 @@ ui <- fluidPage(
                  
                  selectInput(inputId = "slider_select",
                              label = "select slider score",
-                             choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
+                             choices = c("Ecology", "Restoration", "Harvest", "Community")
                              ),
                  
                  
@@ -70,7 +70,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
-     #filter(score_type %in% (inputs$slider_select)) %>%
+     select(inputs$slider_select, Estuary_Na, score ) %>%
     filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
@@ -78,7 +78,16 @@ server <- function(inputs, outputs) {
   outputs$Score_Map <- renderLeaflet({
     
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
-      tm_dots(col = "score", style = "fixed", breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), size = 0.25, palette = "Purples", title = "Score", popup.vars = c("score", "Ecology", "Restoration", "Harvest", "Community")) +
+      tm_dots(
+        col = "score", 
+        style = "fixed", 
+        breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
+        labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
+        size = 0.25, 
+        palette = "Purples", 
+        title = "Score", 
+        #popup.vars = c("score", "Ecology", "Restoration", "Harvest", "Community")
+        ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
     
