@@ -26,8 +26,7 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ES
   st_centroid(geometry) %>%
   mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1) %>%
   select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2) %>%
-  mutate(score_type1 = score_type)
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2)
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
