@@ -44,10 +44,10 @@ ui <- fluidPage(
                              choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
                  ),
                  
-                 selectInput(inputId = "slider_select",
-                             label = "select slider score",
-                             choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
-                             ),
+                 #selectInput(inputId = "slider_select",
+                  #           label = "select slider score",
+                   #          choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
+                    #         ),
                  
                  
                  sliderInput(inputId = "aqua_score_range",
@@ -58,7 +58,7 @@ ui <- fluidPage(
     ),
     mainPanel("Output Map",
               leafletOutput(outputId = "Score_Map", 
-                            width = 800, height = 800
+                            width = 550, height = 800
               ))
   )
 )
@@ -70,8 +70,8 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
-     select(inputs$slider_select, Estuary_Na,  score, Ecology, Restoration, Harvest, Community ) %>%
-    filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
+      #select(inputs$slider_select, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
+      filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
   # Render the map
@@ -87,7 +87,7 @@ server <- function(inputs, outputs) {
         palette = "Purples", 
         title = "Score", 
         id = "Estuary_Na",
-        popup.vars = c("Estuary Name"= "Estuary_Na", "Ecology", "Restoration", "Harvest", "Community")
+        popup.vars = c("Ecology", "Restoration", "Harvest", "Community")
         ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
