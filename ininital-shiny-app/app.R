@@ -70,7 +70,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
-     # filter(score_type %in% (inputs$slider_select)) %>%
+     #filter(score_type %in% (inputs$slider_select)) %>%
     filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
