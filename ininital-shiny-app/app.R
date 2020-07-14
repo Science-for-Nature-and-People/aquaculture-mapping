@@ -70,7 +70,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$aqua_score)) %>%
-     select(Estuary_Na, inputs$slider_select, score, Ecology, Restoration, Harvest, Community ) %>%
+     select(inputs$slider_select, Estuary_Na,  score, Ecology, Restoration, Harvest, Community ) %>%
     filter(score >= inputs$aqua_score_range[1] & score <= inputs$aqua_score_range[2]) 
   })
   
@@ -86,6 +86,7 @@ server <- function(inputs, outputs) {
         size = 0.25, 
         palette = "Purples", 
         title = "Score", 
+        id = "Estuary_Na",
         popup.vars = c("Estuary Name"= "Estuary_Na", "Ecology", "Restoration", "Harvest", "Community")
         ) +
       basemap_streets
