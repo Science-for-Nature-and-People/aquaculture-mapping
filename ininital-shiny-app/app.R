@@ -24,9 +24,9 @@ library(leaflet)
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
   st_transform(crs = 3310) %>%
   st_centroid(geometry) %>%
-  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1) %>%
+  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, "Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1) %>%
   select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2)
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3)
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
@@ -45,7 +45,7 @@ ui <- fluidPage(
                  
                  selectInput(inputId = "aqua_score_size",
                              label = "Category for Size",
-                             choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
+                             choices = c(Ecology = "Ecology3", Restoration = "Restoration3", Harvest = "Harvest3", "Community" = "Community3")
                              ),
       
                  selectInput(inputId = "slider_select",
@@ -86,7 +86,8 @@ server <- function(inputs, outputs) {
         style = "fixed", 
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
-        size = inputs$aqua_score_size, 
+        size = inputs$aqua_score_size,
+        scale = 1,
         palette = "Purples", 
         title = "Conservation Score", 
         id = "Estuary_Na",
