@@ -38,10 +38,15 @@ ui <- fluidPage(
   titlePanel("Conservation Aquaculture Interactive Map"),
   sidebarLayout(
     sidebarPanel(
-                  selectInput(inputId = "aqua_score",
+                  selectInput(inputId = "aqua_score_color",
                             label = "Cateory for Color Ramp",
                             choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
                  ),
+                 
+                 selectInput(inputId = "aqua_score_size",
+                             label = "Category for Size",
+                             choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
+                             ),
       
                  selectInput(inputId = "slider_select",
                              label = "Select Cateory for Slider",
@@ -68,7 +73,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$slider_select)) %>%
-      select(inputs$aqua_score, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
+      select(inputs$aqua_score_color, inputs$aqua_score_size, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
       filter(score >= inputs$slider_score_range[1] & score <= inputs$slider_score_range[2]) 
   })
   
@@ -77,11 +82,11 @@ server <- function(inputs, outputs) {
     
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
       tm_dots(
-        col = inputs$aqua_score, 
+        col = inputs$aqua_score_color, 
         style = "fixed", 
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
-        size = 0.25, 
+        size = inputs$aqua_score_size, 
         palette = "Purples", 
         title = "Conservation Score", 
         id = "Estuary_Na",
