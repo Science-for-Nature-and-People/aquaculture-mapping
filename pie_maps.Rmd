@@ -465,12 +465,18 @@ library(mapview)
 ```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
 
+st_geometry(SNAPP_estuary_polygons)
+SNAPP_estuary_polygons$centroid <- st_centroid(SNAPP_estuary_polygons$geometry)
+
+
 #st_centroid needs projection (using NAD83/California Albers)
-SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
+SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons %>%
   st_transform(crs = 3310)
 
 #creating centroid data
-SNAPP_estuary_polygons_NAD83$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry)
+SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>% 
+  st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
+
 
 ```
   
@@ -631,15 +637,33 @@ ggplot(plot_points) +
 Trying ggrepel to prevent overlap using ggrepel::repel_boxes() following example from [here](http://zachcp.org/blog/2016/ggrepelmaps/) and [here](https://github.com/slowkow/ggrepel/issues/24)
 
 ```{r}
-bar_data <-  data_scores %>%
-  drop_na("long") %>% 
-  #select(-coastwide_coservation) %>%  
-  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-  pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
+  dplyr::mutate(estuary_or_subbasin = SNAPP_estuary_polygons_centroid$Estuary_Na) %>% 
+  rename(lat = Y, long = X)
 
-point_data <-  data_scores %>%
-  drop_na("long") %>% 
+bar_data <- SNAPP_estuary_polygons_centroid %>% 
+  select(Estuary_Na, Ecol1, Restor1, Harvest1, Comm1) %>% 
+  dplyr::filter(Ecol1 > 0.5) %>% 
+  rename(estuary_or_subbasin = Estuary_Na)  %>% 
+  left_join(coords, by = "estuary_or_subbasin")
+
+st_geometry(bar_data) <- NULL
+
+coords_high_ecol <- bar_data %>% 
   select(estuary_or_subbasin, lat, long)
+
+bar_data_long <- bar_data %>% 
+   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+
+# bar_data <-  data_scores %>%
+#   drop_na("long") %>% 
+#   #select(-coastwide_coservation) %>%  
+#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+#   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+
+# point_data <-  data_scores %>%
+#   drop_na("long") %>% 
+#   select(estuary_or_subbasin, lat, long)
 
 library(ggrepel)
 library(ggimage)
@@ -690,22 +714,22 @@ findboxes <- function(
 }
 
 # data frame with two x and two y values
-df1 <- findboxes(point_data,
+df1 <- findboxes(coords_high_ecol,
   xcol = "long", ycol = "lat",
-  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .75,
-  box_padding_y = Reduce("-", rev(range(point_data$long))) * 1.25,
-  point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
-  point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
+  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .5,
+  box_padding_y = Reduce("-", rev(range(point_data$long))) * .5,
+  point_padding_x = Reduce("-", rev(range(point_data$long))) * .5,
+  point_padding_y = Reduce("-", rev(range(point_data$lat))) * .5,
   force = 1e-4, #force = repulsion
-  xlim = c(-130, -115),
-  ylim = c(30, 53)
+  xlim = c(-120, -113),
+  ylim = c(30, 55)
 )
 
 #renaming first column to match original bar_data df
 colnames(df1)[1] <- "long"
 
 #adding offset values to bar_data
-bar_data_offset <- point_data %>%
+bar_data_offset <- coords_high_ecol %>%
   left_join(df1, by = "long") %>%
   select(-c(y1)) %>% #removing repeated lat values
   rename(lat_offset = y2, long_offset = x2) #renaming to be more descriptive
@@ -715,7 +739,7 @@ offset_points <- st_as_sf(bar_data_offset, crs = 4326, coords = c("long_offset",
   select(estuary_or_subbasin, geometry)
 
 # make a separate ggplot for each estuary:
-test_plots <- bar_data %>% 
+test_plots <- bar_data_long %>% 
   group_by(estuary_or_subbasin) %>% 
   nest() %>%
   mutate(plot = map2(data, estuary_or_subbasin,
@@ -752,23 +776,13 @@ estuary_annotation <- offset_points %>%
 ggplot(offset_points) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
-  xlim(c(-130, -115))+
-  ylim(c(30, 53))+
+  xlim(c(-130, -113))+
+  ylim(c(30, 55))+
   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
   estuary_annotation
 
-# #zoom
-# ggplot(offset_points) +
-#   geom_sf(data = us_boundaries()) +
-#   geom_sf(data = canada) + 
-#   xlim(c(-125, -121.5))+
-#   ylim(c(45, 49.5))+
-#   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
-#   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
-#   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
-#   estuary_annotation
 
 ```
 
@@ -963,6 +977,35 @@ temp_plot
 final <- image_composite(fig, barfig1, offset = "+425+275") #offset is in pixels so I think they will need to be manually placed
   
 print(final)
+
+```
+
+Making large plot to go in supplemental materials
+
+```{r}
+
+#make main map w/ points
+
+base_map <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  geom_point(aes(long, lat), color = "black")
+
+base_map
+
+#make all the barcharts (look in old code)
+
+       
+# #joining grobs together to make a map
+# ggplot() +
+#   coord_equal(xlim = c(0, 28), ylim = c(0, 20), expand = FALSE) +
+#   annotation_custom(ggplotGrob(base_map), xmin = 0, xmax = 20, ymin = 0, 
+#         ymax = 20)+
+#    annotation_custom(ggplotGrob(test_plot_1), xmin = 20, xmax = 28, ymin = 11.25, 
+#         ymax = 19)
+
 
 ```
 
