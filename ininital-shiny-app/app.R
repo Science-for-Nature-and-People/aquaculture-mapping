@@ -32,6 +32,9 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ES
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
+text <- as.character("Click points to see more information.")
+
+
 
 ##### Beginning of the App
 
@@ -89,7 +92,7 @@ server <- function(inputs, outputs) {
     
     #determines the the map desplay
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
-      tm_bubbles(
+      tm_dots(
         size = inputs$aqua_score_size,
         sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
@@ -99,11 +102,13 @@ server <- function(inputs, outputs) {
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         palette = "Purples", #tmaptools::palette_explorer to find other palettes
-        #title = "Conservation Score", 
+        title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
         legend.size.show = TRUE
         ) +
+      tm_legend(legend.show = TRUE
+                ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
     
