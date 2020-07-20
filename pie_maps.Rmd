@@ -993,11 +993,38 @@ base_map <- ggplot(coords) +
   ylim(c(30, 53))+
   geom_point(aes(long, lat), color = "black")
 
-base_map
+#make all the barcharts and save into a list
+plot_lst <- vector("list", length = 13)
 
-#make all the barcharts (look in old code)
+for( i in 1:13){
+  temp_data <- bar_data[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
 
-       
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       theme(axis.title.x=element_blank(), #removing all labels
+                             axis.text.x=element_blank(),
+                             axis.ticks.x=element_blank(),
+                             axis.title.y=element_blank(),
+                             axis.text.y=element_blank(),
+                             axis.ticks.y=element_blank(),
+                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+                             plot.background = element_rect(fill = "transparent",colour = NA),
+                             plot.margin = unit(c(0, 0, 0, 0), "null"),
+                             axis.line = element_line())
+
+    plot_lst[[i]] <- test_pie
+}
+
+# using cowploat and patchwork package to make a matrix
+library(patchwork)
+library(cowplot)
+
+plot_patch <- cowplot::plot_grid(plotlist = plot_lst, ncol=1)
+plot_patch | base_map
+
 # #joining grobs together to make a map
 # ggplot() +
 #   coord_equal(xlim = c(0, 28), ylim = c(0, 20), expand = FALSE) +
@@ -1005,7 +1032,6 @@ base_map
 #         ymax = 20)+
 #    annotation_custom(ggplotGrob(test_plot_1), xmin = 20, xmax = 28, ymin = 11.25, 
 #         ymax = 19)
-
 
 ```
 
