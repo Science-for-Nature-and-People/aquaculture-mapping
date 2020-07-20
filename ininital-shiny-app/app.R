@@ -107,7 +107,8 @@ server <- function(inputs, outputs) {
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
         legend.size.show = TRUE
         ) +
-      tm_legend(legend.show = TRUE
+      tm_legend(
+        legend.show = TRUE
                 ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
