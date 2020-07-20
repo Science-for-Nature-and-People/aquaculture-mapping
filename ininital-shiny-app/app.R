@@ -7,6 +7,7 @@ library(shiny)
 library(shinydashboard)
 library(shinythemes)
 library(tmap)
+library(tmaptools)
 library(leaflet)
 library(sf)
 library(janitor)
@@ -97,7 +98,8 @@ server <- function(inputs, outputs) {
         palette = "Purples", #tmaptools::palette_explorer to find other palettes
         title = "Conservation Score", 
         id = "Estuary_Na",
-        popup.vars = c("Ecology", "Restoration", "Harvest", "Community")
+        popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
+        legend.size.show = TRUE
         ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
