@@ -96,7 +96,7 @@ server <- function(inputs, outputs) {
         size = inputs$aqua_score_size,
         sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
-        alpha = 1,
+        alpha = 1, 
         col = inputs$aqua_score_color,
         style = "fixed", 
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
@@ -105,6 +105,7 @@ server <- function(inputs, outputs) {
         title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
+        clustering = TRUE, #This if for clustering the points when zoomed out
         legend.size.show = TRUE
         ) +
       tm_legend(
