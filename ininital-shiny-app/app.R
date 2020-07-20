@@ -112,6 +112,13 @@ server <- function(inputs, outputs) {
                 ) +
       basemap_streets
     tmap_leaflet(SNAPP_estuary_map_points)
+    #try adding view argument at the end.
+    #symbol.size inside tm_view.
+    #try commenting out legend size.
+    #look into condensing close dots
+    #For legend try to do it after creating map
+    #try putting bar charts on the points
+    # Adding Plotting for in pie charts file
     
   })
   
