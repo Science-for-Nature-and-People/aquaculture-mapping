@@ -96,7 +96,7 @@ server <- function(inputs, outputs) {
         size = inputs$aqua_score_size,
         sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
-        alpha = 1, 
+        alpha = 1, #this controls the transparency of the points
         col = inputs$aqua_score_color,
         style = "fixed", 
         breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
