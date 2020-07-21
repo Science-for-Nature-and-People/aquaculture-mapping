@@ -994,7 +994,7 @@ base_map <- ggplot(coords) +
   geom_point(aes(long, lat), color = "black")
 
 #make all the barcharts and save into a list
-plot_lst <- vector("list", length = 13)
+plot_list <- vector("list", length = 13)
 
 for( i in 1:13){
   temp_data <- bar_data[i,] %>% #working on the selected row
@@ -1015,15 +1015,20 @@ for( i in 1:13){
                              plot.margin = unit(c(0, 0, 0, 0), "null"),
                              axis.line = element_line())
 
-    plot_lst[[i]] <- test_pie
+    plot_list[[i]] <- test_pie
 }
 
 # using cowploat and patchwork package to make a matrix
 library(patchwork)
 library(cowplot)
 
-plot_patch <- cowplot::plot_grid(plotlist = plot_lst, ncol=1)
+plot_patch <- cowplot::plot_grid(plotlist = plot_list, ncol=1)
+
 plot_patch | base_map
+
+(plot_list[[1]] / plot_list[[2]] / plot_list[[3]])| (base_map)
+
+
 
 # #joining grobs together to make a map
 # ggplot() +
@@ -1032,6 +1037,8 @@ plot_patch | base_map
 #         ymax = 20)+
 #    annotation_custom(ggplotGrob(test_plot_1), xmin = 20, xmax = 28, ymin = 11.25, 
 #         ymax = 19)
+
+
 
 ```
 
