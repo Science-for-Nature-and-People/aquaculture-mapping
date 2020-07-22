@@ -45,7 +45,7 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ES
   )) %>%
   mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, "Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1) %>%
   select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3)
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3) 
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
@@ -82,7 +82,7 @@ ui <- fluidPage(
                  #This is a slide tool that filters the scores of the estuaries
                  sliderInput(inputId = "slider_score_range",
                              label = "Score Range",
-                             min = 0, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
+                             min = 0, max = 1, value = c(-1,1), step = 0.1, ticks = TRUE
                  )
                  
     ),
@@ -100,7 +100,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$slider_select)) %>%
-      select(inputs$aqua_score_color, inputs$aqua_score_size, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community ) %>%
+      select(inputs$aqua_score_color, inputs$aqua_score_size, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community) %>%
       filter(score >= inputs$slider_score_range[1] & score <= inputs$slider_score_range[2]) 
   })
   
@@ -122,7 +122,7 @@ server <- function(inputs, outputs) {
         title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
-        clustering = FALSE, #This if for clustering the points when zoomed out
+        clustering = TRUE, #This if for clustering the points when zoomed out
         legend.size.show = TRUE
         ) +
       tm_legend(
