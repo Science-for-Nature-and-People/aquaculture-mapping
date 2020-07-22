@@ -14,6 +14,7 @@ library(janitor)
 library(USAboundaries)
 library(here)
 library(leaflet)
+library(leafpop)
 
 # estuary_reactive
 
@@ -96,16 +97,16 @@ server <- function(inputs, outputs) {
         size = inputs$aqua_score_size,
         sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
-        alpha = 1, #this controls the transparency of the points
+        alpha = .85, #this controls the transparency of the points
         col = inputs$aqua_score_color,
         style = "fixed", 
-        breaks = c(-1, 0, 0.25, 0.5, 0.75, 1), 
+        breaks = c(-1, 0, 0.25, 0.5, 0.75, 1),
         labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         palette = "Purples", #tmaptools::palette_explorer to find other palettes
         title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
-        clustering = TRUE, #This if for clustering the points when zoomed out
+        clustering = FALSE, #This if for clustering the points when zoomed out
         legend.size.show = TRUE
         ) +
       tm_legend(
