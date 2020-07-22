@@ -27,7 +27,7 @@ library(leafpop)
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
   st_transform(crs = 3310) %>%
   st_centroid(geometry) %>%
-  mutate(Ecol1 = case_when(
+  mutate(Ecol1 = case_when( #This is mutating the data so that no score is less than zero to match the final data
     Ecol1 < 0 ~ 0,
     Ecol1 >= 0 ~ Ecol1
   )) %>%
@@ -82,7 +82,7 @@ ui <- fluidPage(
                  #This is a slide tool that filters the scores of the estuaries
                  sliderInput(inputId = "slider_score_range",
                              label = "Score Range",
-                             min = -1, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
+                             min = 0, max = 1, value = c(-1,1), step = 0.25, ticks = TRUE
                  )
                  
     ),
@@ -116,8 +116,8 @@ server <- function(inputs, outputs) {
         alpha = .85, #this controls the transparency of the points
         col = inputs$aqua_score_color,
         style = "fixed", 
-        breaks = c(-1, 0, 0.25, 0.5, 0.75, 1),
-        labels = c("-1 - 0", "0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
+        breaks = c(0, 0.25, 0.5, 0.75, 1),
+        labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         palette = "Purples", #tmaptools::palette_explorer to find other palettes
         title = "Conservation Score", 
         id = "Estuary_Na",
