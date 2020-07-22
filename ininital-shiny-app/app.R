@@ -27,6 +27,22 @@ library(leafpop)
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
   st_transform(crs = 3310) %>%
   st_centroid(geometry) %>%
+  mutate(Ecol1 = case_when(
+    Ecol1 < 0 ~ 0,
+    Ecol1 >= 0 ~ Ecol1
+  )) %>%
+  mutate(Restor1 = case_when(
+    Restor1 < 0 ~ 0,
+    Restor1 >= 0 ~ Restor1
+  )) %>%
+  mutate(Harvest1 = case_when(
+    Harvest1 < 0 ~ 0,
+    Harvest1 >= 0 ~ Harvest1
+  )) %>%
+  mutate(Comm1 = case_when(
+    Comm1 < 0 ~ 0,
+    Comm1 >= 0 ~ Comm1
+  )) %>%
   mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, "Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1) %>%
   select(-NCEAM) %>%
   gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3)
