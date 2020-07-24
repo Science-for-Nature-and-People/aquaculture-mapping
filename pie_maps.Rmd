@@ -37,6 +37,9 @@ library(CDECRetrieve)
 library(purrr)
 library(zoo)
 library(ggspatial)
+library(patchwork)
+library(cowplot)
+library(ggpubr)
 
 ```
 
@@ -461,7 +464,6 @@ library(mapview)
 
 ```
 
-
 ```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
 
@@ -566,7 +568,7 @@ ggplot(station.points) +
 ```
 
 
-```{r}
+```{r, barcharts on map}
 library(mapdata)
 
 #Trying to overlay barcharts on a static ggplot map
@@ -636,7 +638,7 @@ ggplot(plot_points) +
 
 Trying ggrepel to prevent overlap using ggrepel::repel_boxes() following example from [here](http://zachcp.org/blog/2016/ggrepelmaps/) and [here](https://github.com/slowkow/ggrepel/issues/24)
 
-```{r}
+```{r, barcharts on map with offsets}
 coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
   dplyr::mutate(estuary_or_subbasin = SNAPP_estuary_polygons_centroid$Estuary_Na) %>% 
   rename(lat = Y, long = X)
@@ -721,8 +723,8 @@ df1 <- findboxes(coords_high_ecol,
   point_padding_x = Reduce("-", rev(range(point_data$long))) * .5,
   point_padding_y = Reduce("-", rev(range(point_data$lat))) * .5,
   force = 1e-4, #force = repulsion
-  xlim = c(-120, -113),
-  ylim = c(30, 55)
+  xlim = c(-120, -112),
+  ylim = c(27, 55)
 )
 
 #renaming first column to match original bar_data df
@@ -746,6 +748,7 @@ test_plots <- bar_data_long %>%
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
                        geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+                       ylim(0, 1)+
                        theme(axis.title.x=element_blank(), #removing all labels
                              axis.text.x=element_blank(),
                              axis.ticks.x=element_blank(),
@@ -757,7 +760,6 @@ test_plots <- bar_data_long %>%
                              plot.background = element_rect(fill = "transparent",colour = NA),
                              plot.margin = unit(c(0, 0, 0, 0), "null"),
                              axis.line = element_line())
-                          
            )
          )
 
@@ -772,23 +774,43 @@ estuary_annotation <- offset_points %>%
                                               ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
   pull(annotation)
 
-# make ggplot and add list of notations
-ggplot(offset_points) +
+#saving legend as separate object
+simple_barchart <-ggplot(bar_data_long, aes(score, fill = category))+
+         geom_bar()+
+  theme(legend.margin = margin(0, 0, 0, 0))+
+  theme(
+    legend.title = element_text(size = 7),
+    legend.text = element_text(size = 7))
+legend <- get_legend(simple_barchart)
+gg_legend <-as_ggplot(legend)
+
+#create final map
+bar_charts_offset <- ggplot(offset_points) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   xlim(c(-130, -113))+
-  ylim(c(30, 55))+
+  ylim(c(27, 55))+
   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
+  geom_bar(data = bar_data_long, aes(score, fill = category))+
   estuary_annotation
 
+# bar_charts_offset + (plot_spacer() / (gg_legend + plot_spacer() + plot_spacer())) +plot_layout(nrow=1)
+
+layout <- c(
+  area(t = 1, l = 1, b = 9, r = 7),
+  area(t = 8, l = 1, b = 8, r = 6)
+)
+
+bar_charts_offset + gg_legend + 
+  plot_layout(design = layout)
 
 ```
 
 Trying example from above but choosing an offset for long
 
-```{r}
+```{r, barchart on map split left and right}
 
 # Making two datasets with selecting sites from every other row
 bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
@@ -859,8 +881,7 @@ ggplot(offset_points) +
 
 Trying manual offset put through the geom_boxes function
 
-```{r}
-
+```{r, manual offsets}
 # Making two datasets with selecting sites from every other row
 bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
   drop_na("long") %>% 
@@ -950,7 +971,6 @@ ggplot(final_offset_points) +
 
 ```
 
-
 Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
 
 ```{r}
@@ -982,16 +1002,19 @@ print(final)
 
 Making large plot to go in supplemental materials
 
-```{r}
-
+testing using just the 13 points
+```{r, supplemental figure testing}
 #make main map w/ points
 
 base_map <- ggplot(coords) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
+  geom_sf(data = mexico) +
   xlim(c(-130, -115))+
   ylim(c(30, 53))+
   geom_point(aes(long, lat), color = "black")
+
+base_map
 
 #make all the barcharts and save into a list
 plot_list <- vector("list", length = 13)
@@ -1013,21 +1036,21 @@ for( i in 1:13){
                              panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
                              plot.background = element_rect(fill = "transparent",colour = NA),
                              plot.margin = unit(c(0, 0, 0, 0), "null"),
-                             axis.line = element_line())
+                             axis.line = element_line())+
+    coord_fixed(ratio = 3)
 
     plot_list[[i]] <- test_pie
 }
 
-# using cowploat and patchwork package to make a matrix
-library(patchwork)
-library(cowplot)
 
-plot_patch <- cowplot::plot_grid(plotlist = plot_list, ncol=1)
+# using patchwork to join together
+plot_patch <- wrap_plots(plot_list, ncol = 1, height = 0.05)
+
+plot_patch 
 
 plot_patch | base_map
 
-(plot_list[[1]] / plot_list[[2]] / plot_list[[3]])| (base_map)
-
+plot_spacer() + plot_patch | base_map
 
 
 # #joining grobs together to make a map
@@ -1038,6 +1061,314 @@ plot_patch | base_map
 #    annotation_custom(ggplotGrob(test_plot_1), xmin = 20, xmax = 28, ymin = 11.25, 
 #         ymax = 19)
 
+
+
+```
+
+Trying it with all 66 centroids
+
+```{r, supplemental figure all sites}
+base_map <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  xlim(c(-130, -115))+
+  ylim(c(30, 53))+
+  geom_point(aes(long, lat), color = "black")
+
+bar_data_all <- SNAPP_estuary_polygons_centroid %>% 
+  select(Estuary_Na, Ecol1, Restor1, Harvest1, Comm1) %>% 
+  rename(estuary_or_subbasin = Estuary_Na)  %>% 
+  left_join(coords, by = "estuary_or_subbasin") %>% 
+  st_drop_geometry() #removes geometry from sf object
+
+plot_list_all <- vector("list", length = 66)
+
+for( i in 1:66){
+  temp_data <- bar_data_all[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  graph_title <- temp_data$estuary_or_subbasin
+
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    ggtitle(graph_title) + #trying to add different title to each
+    theme(plot.title = element_text(size = 6, face = "bold"))+
+    theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+    coord_fixed(ratio = 5)
+
+    plot_list_all[[i]] <- test_pie
+
+}
+
+# using patchwork to join together
+# plot_patch <- wrap_plots(plot_list_all, ncol = 1, height = 0.05)
+
+wrap_plots(plot_list_all[1])
+
+set_1 <- plot_list_all[1:33]
+set_1_patch <- wrap_plots(set_1, ncol = 1)
+
+set_2 <- plot_list_all[34:66]
+set_2_patch <- wrap_plots(set_2, ncol = 1)
+
+plot_spacer() + set_1_patch | base_map | set_2_patch + plot_spacer()
+
+
+```
+
+Making zoom panels
+
+```{r}
+
+base_map_zoom_1 <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-125.5, -121), ylim = c(45, 49.5))
+
+bar_data_zoom_1 <- bar_data_all %>% 
+  filter(long >= -125.5 & long <= -121) %>% 
+  filter(lat >= 45 & lat <= 49.5)
+
+plot_list_zoom_1 <- vector("list", length = 66)
+
+
+for( i in 1:14){
+  temp_data <- bar_data_zoom_1[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  graph_title <- temp_data$estuary_or_subbasin
+
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
+    theme(plot.title = element_text(size = 6, face = "bold"))+
+    theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+    coord_fixed(ratio = 5)
+
+    plot_list_zoom_1[[i]] <- test_pie
+
+}
+
+# using patchwork to join together
+supp_zoom_1 <- (wrap_plots(plot_list_zoom_1[1:14], ncol = 1)) | base_map_zoom_1
+
+# zoom 2
+base_map_zoom_2 <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5))
+
+bar_data_zoom_2 <- bar_data_all %>% 
+  filter(long >= -123.5 & long <= -118.5) %>% 
+  filter(lat >= 34 & lat <= 38.5)
+
+plot_list_zoom_2 <- vector("list", length = 66)
+
+for( i in 1:13){
+  temp_data <- bar_data_zoom_2[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  graph_title <- temp_data$estuary_or_subbasin
+
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    #ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
+    theme(plot.title = element_text(size = 6, face = "bold"))+
+    theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+    coord_fixed(ratio = 5)
+
+    plot_list_zoom_2[[i]] <- test_pie
+
+}
+
+supp_zoom_2 <- (wrap_plots(plot_list_zoom_2[1:13], ncol = 1)) | base_map_zoom_2
+
+#zoom 3
+base_map_zoom_3 <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+   geom_sf(data = mexico) +
+  geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-120, -116), ylim = c(30, 34.5))
+
+bar_data_zoom_3 <- bar_data_all %>% 
+  filter(long >= -120 & long <= -116) %>% 
+  filter(lat >= 30 & lat <= 34.5)
+
+plot_list_zoom_3 <- vector("list", length = 66)
+
+for( i in 1:28){
+  temp_data <- bar_data_zoom_3[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  graph_title <- temp_data$estuary_or_subbasin
+
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    #ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
+    theme(plot.title = element_text(size = 6, face = "bold"))+
+    theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+    coord_fixed(ratio = 5)
+
+    plot_list_zoom_3[[i]] <- test_pie
+
+}
+
+supp_zoom_3 <- (wrap_plots(plot_list_zoom_3[1:28], ncol = 1)) | base_map_zoom_3
+
+
+```
+
+```{r}
+ggsave("figures/supp_zoom_1.png", supp_zoom_1, width = 12, height = 6, dpi = 300)
+ggsave("figures/supp_zoom_2.png", supp_zoom_2, width = 12, height = 6, dpi = 300)
+ggsave("figures/supp_zoom_3.png", supp_zoom_3, width = 12, height = 6, dpi = 300)
+```
+
+# making a function that takes the lat/long limits and tidys data, makes barcharts, and assembles map
+
+```{r}
+
+supplement_figures <- function(x1, x2, y1, y2){
+  base_map_zoom <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(x1, x2), ylim = c(y1, y2))
+  
+  bar_data_zoom <- bar_data_all %>% 
+  filter(long >= x1 & long <= x2) %>% 
+  filter(lat >= y1 & lat <= y2)
+  
+  data_len <- length(bar_data_zoom)
+  
+  plot_list_zoom <- vector("list", length = 66)
+  
+  for( i in 1:data_len){
+    temp_data <- bar_data_zoom[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+    
+    graph_title <- temp_data$estuary_or_subbasin
+    
+    test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+      geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+      ggtitle(graph_title) + #trying to add different title to each
+      ylim(0,1)+
+      theme(plot.title = element_text(size = 6, face = "bold"))+
+      theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+      coord_fixed(ratio = 5)
+    
+    plot_list_zoom[[i]] <- test_pie
+  }
+  
+supp_zoom <- (wrap_plots(plot_list_zoom[1:data_len], ncol = 1)) | base_map_zoom
+
+supp_zoom
+  
+}
+
+supplement_figures(-123.5, -118.5, 34, 38.5)
+
+
+```
+
+```{r, ecology point map}
+
+centroid_points <-  SNAPP_estuary_polygons_centroid %>%
+  select(Estuary_Na, Ecol1, Restor1, Harvest1, Comm1) %>%
+  rename(estuary_or_subbasin = Estuary_Na)  %>%
+  left_join(coords, by = "estuary_or_subbasin") %>% 
+  mutate(high_ecol = ifelse(Ecol1 >= 0.5, "yes", "no"))
+           
+ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = centroid_points, aes(color = Ecol1), size = 3) +
+  scale_color_gradientn(colours = c(
+    "#eff3ff",
+    "#6baed6",
+    "#084594"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  #scale_x_continuous(breaks = c(-130, -116)) +
+  #scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_void()
+
+ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = SNAPP_estuary_polygons_centroid$centroid, aes(color = SNAPP_estuary_polygons_centroid$Ecol1, size = 2, shape = as.factor(SNAPP_estuary_polygons_centroid$high_ecol))) +
+  scale_color_gradientn(colours = c(
+    "#eff3ff",
+    "#6baed6",
+    "#084594"
+  )) +
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  theme_void()
 
 
 ```
