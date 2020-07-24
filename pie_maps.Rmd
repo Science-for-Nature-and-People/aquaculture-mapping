@@ -1340,35 +1340,28 @@ centroid_points <-  SNAPP_estuary_polygons_centroid %>%
   left_join(coords, by = "estuary_or_subbasin") %>% 
   mutate(high_ecol = ifelse(Ecol1 >= 0.5, "yes", "no"))
            
-ggplot() +
+point_map <- ggplot() +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) +
   geom_sf(data = mexico) +
-  geom_sf(data = centroid_points, aes(color = Ecol1), size = 3) +
+  geom_sf(data = SNAPP_estuary_polygons_centroid$centroid, aes(color = SNAPP_estuary_polygons_centroid$Ecol1, size = 2, shape = centroid_points$high_ecol)) +
   scale_color_gradientn(colours = c(
     "#eff3ff",
     "#6baed6",
     "#084594"
   )) +
-  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
-  #scale_x_continuous(breaks = c(-130, -116)) +
-  #scale_y_continuous(breaks = c(30, 40, 50)) +
-  theme_void()
-
-ggplot() +
-  geom_sf(data = us_boundaries()) +
-  geom_sf(data = canada) +
-  geom_sf(data = mexico) +
-  geom_sf(data = SNAPP_estuary_polygons_centroid$centroid, aes(color = SNAPP_estuary_polygons_centroid$Ecol1, size = 2, shape = as.factor(SNAPP_estuary_polygons_centroid$high_ecol))) +
-  scale_color_gradientn(colours = c(
-    "#eff3ff",
-    "#6baed6",
-    "#084594"
-  )) +
+  scale_shape_manual(values=c(20, 18))+
+  scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
+  labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
   coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
   scale_x_continuous(breaks = c(-130, -116)) +
   scale_y_continuous(breaks = c(30, 40, 50)) +
+  guides(size = FALSE)+ #removing size from legend
   theme_void()
+
+```
+```{r}
+ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
 
 
 ```
