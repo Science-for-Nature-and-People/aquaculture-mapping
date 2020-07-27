@@ -1279,6 +1279,7 @@ ggsave("figures/supp_zoom_3.png", supp_zoom_3, width = 12, height = 6, dpi = 300
 ```{r}
 
 supplement_figures <- function(x1, x2, y1, y2){
+  
   base_map_zoom <- ggplot(coords) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
@@ -1286,14 +1287,15 @@ supplement_figures <- function(x1, x2, y1, y2){
   coord_sf(xlim = c(x1, x2), ylim = c(y1, y2))
   
   bar_data_zoom <- bar_data_all %>% 
-  filter(long >= x1 & long <= x2) %>% 
-  filter(lat >= y1 & lat <= y2)
+    arrange(desc(lat)) %>% 
+    filter(long >= x1 & long <= x2) %>% 
+    filter(lat >= y1 & lat <= y2)
   
   data_len <- length(bar_data_zoom)
   
-  plot_list_zoom <- vector("list", length = 66)
+  plot_list_zoom <- vector("list", length = data_len)
   
-  for( i in 1:data_len){
+  for(i in 1:data_len){
     temp_data <- bar_data_zoom[i,] %>% #working on the selected row
     dplyr::select(-c(lat, long)) %>%
     pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
@@ -1323,14 +1325,63 @@ supplement_figures <- function(x1, x2, y1, y2){
   
 supp_zoom <- (wrap_plots(plot_list_zoom[1:data_len], ncol = 1)) | base_map_zoom
 
-supp_zoom
-  
 }
 
-supplement_figures(-123.5, -118.5, 34, 38.5)
-
+sup_zoom_funct <- supplement_figures(-123.5, -118.5, 34, 38.5)
+sup_zoom_funct
 
 ```
+
+```{r}
+#function testing
+base_map_zoom_2 <- ggplot(coords) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5))
+
+bar_data_zoom_2 <- bar_data_all %>% 
+  filter(long >= -123.5 & long <= -118.5) %>% 
+  filter(lat >= 34 & lat <= 38.5)
+
+len <-  length(bar_data_zoom_2)
+
+plot_list_zoom_2 <- vector("list", length = 66)
+
+for( i in 1:len){
+  temp_data <- bar_data_zoom_2[i,] %>% #working on the selected row
+    dplyr::select(-c(lat, long)) %>%
+    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  graph_title <- temp_data$estuary_or_subbasin
+
+  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
+    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    #ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
+    theme(plot.title = element_text(size = 6, face = "bold"))+
+    theme(axis.title.x = element_blank(), #removing all labels
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+          plot.background = element_rect(fill = "transparent",colour = NA),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          axis.line = element_line()) +
+    coord_fixed(ratio = 5)
+
+    plot_list_zoom_2[[i]] <- test_pie
+
+}
+
+supp_zoom_2 <- (wrap_plots(plot_list_zoom_2[1:len], ncol = 1)) | base_map_zoom_2
+supp_zoom_2
+
+```
+
 
 ```{r, ecology point map}
 
@@ -1360,9 +1411,8 @@ point_map <- ggplot() +
   theme_void()
 
 ```
+
 ```{r}
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
-
-
 ```
 
