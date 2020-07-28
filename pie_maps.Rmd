@@ -41,6 +41,7 @@ library(patchwork)
 library(cowplot)
 library(ggpubr)
 
+
 ```
 
 ```{r}
@@ -996,7 +997,7 @@ print(final)
 
 ```
 
-Making large plot to go in supplemental materials
+###Making large plot to go in supplemental materials
 
 testing using just the 13 points:
 ```{r, supplemental figure testing}
@@ -1009,8 +1010,8 @@ base_map <- ggplot(coords) +
   geom_sf(data = mexico) +
   xlim(c(-130, -115))+
   ylim(c(30, 53))+
-  geom_point(aes(long, lat), color = "black")+
-  geom_text(aes(long, lat, label = coords$ID))
+  # geom_point(aes(long, lat), color = "black")+
+  geom_text(aes(long, lat, label = ID))
 
 base_map
 
@@ -1021,9 +1022,13 @@ for( i in 1:13){
   temp_data <- bar_data[i,] %>% #working on the selected row
     dplyr::select(-c(lat, long)) %>%
     pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
+  
+  # graph_title <- paste(i, ".", temp_data$estuary_or_subbasin) #making title with coordinating number and estuary name
 
   test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
     geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+    # ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
     theme(axis.title.x=element_blank(), #removing all labels
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
@@ -1042,13 +1047,13 @@ for( i in 1:13){
 
 
 # using patchwork to join together
-plot_patch <- wrap_plots(plot_list, ncol = 1, height = 0.05)
+plot_patch <- wrap_plots(plot_list, ncol = 1, width = 1)
 
 plot_patch 
 
 plot_patch | base_map
 
-plot_spacer() + plot_patch | base_map
+#plot_spacer() + plot_patch | base_map
 
 # #joining grobs together to make a map
 # ggplot() +
@@ -1058,6 +1063,18 @@ plot_spacer() + plot_patch | base_map
 #    annotation_custom(ggplotGrob(test_plot_1), xmin = 20, xmax = 28, ymin = 11.25, 
 #         ymax = 19)
 
+
+```
+
+testing different layouts
+
+```{r}
+
+plot_patch <- wrap_plots(plot_list, ncol = 2, width = 1)
+
+plot_patch 
+
+plot_patch | base_map
 
 ```
 
@@ -1071,8 +1088,8 @@ base_map <- ggplot(coords) +
   geom_sf(data = canada) + 
   xlim(c(-130, -115))+
   ylim(c(30, 53))+
-  geom_point(aes(long, lat), color = "black")+
-  geom_text(aes(long, lat, label = coords$ID))
+  # geom_point(aes(long, lat), color = "black")+
+  geom_text(aes(long, lat, label = ID))
 
 bar_data_all <- SNAPP_estuary_polygons_centroid %>% 
   select(Estuary_Na, Ecol1, Restor1, Harvest1, Comm1) %>% 
@@ -1084,14 +1101,15 @@ plot_list_all <- vector("list", length = 66)
 
 for( i in 1:66){
   temp_data <- bar_data_all[i,] %>% #working on the selected row
-    dplyr::select(-c(lat, long)) %>%
+    dplyr::select(-c(lat, long, ID)) %>%
     pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
   
-  graph_title <- temp_data$estuary_or_subbasin
+  #graph_title <- temp_data$estuary_or_subbasin
 
   test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
     geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
-    ggtitle(graph_title) + #trying to add different title to each
+    #ggtitle(graph_title) + #trying to add different title to each
+    ylim(0,1)+
     theme(plot.title = element_text(size = 6, face = "bold"))+
     theme(axis.title.x = element_blank(), #removing all labels
           axis.text.x = element_blank(),
@@ -1110,19 +1128,30 @@ for( i in 1:66){
 
 }
 
-# using patchwork to join together
-# plot_patch <- wrap_plots(plot_list_all, ncol = 1, height = 0.05)
+# # using patchwork to join together
+# 
+# set_1 <- plot_list_all[1:33]
+# set_1_patch <- wrap_plots(set_1, ncol = 1)
+# 
+# set_2 <- plot_list_all[34:66]
+# set_2_patch <- wrap_plots(set_2, ncol = 1)
+# 
+# plot_spacer() + set_1_patch | base_map | set_2_patch + plot_spacer()
 
-wrap_plots(plot_list_all[1])
+```
 
-set_1 <- plot_list_all[1:33]
-set_1_patch <- wrap_plots(set_1, ncol = 1)
+working on layout
 
-set_2 <- plot_list_all[34:66]
-set_2_patch <- wrap_plots(set_2, ncol = 1)
+```{r}
 
-plot_spacer() + set_1_patch | base_map | set_2_patch + plot_spacer()
+plot_patch <- wrap_plots(plot_list_all, ncol = 11, nrow = 6, width = 1)
 
+prelim_barchart_supplement <- plot_patch | base_map
+
+```
+
+```{r}
+ggsave("figures/prelim_barchart_supplement .png", prelim_barchart_supplement, width = 12, height = 6, dpi = 300)
 ```
 
 Making zoom panels
@@ -1273,6 +1302,7 @@ ggsave("figures/supp_zoom_3.png", supp_zoom_3, width = 12, height = 6, dpi = 300
 ```
 
 # making a function that takes the lat/long limits and tidys data, makes barcharts, and assembles map
+- currently outputting the wrong number of bar charts when compared to the map and the zooms done above.
 
 ```{r}
 coords$ID <- seq.int(nrow(coords)) #making a row of numbers to use for point labels
@@ -1331,57 +1361,6 @@ sup_zoom_funct
 
 ```
 
-```{r}
-#function testing
-base_map_zoom_2 <- ggplot(coords) +
-  geom_sf(data = us_boundaries()) +
-  geom_sf(data = canada) + 
-  geom_point(aes(long, lat), color = "black")+
-  coord_sf(xlim = c(-123.5, -118.5), ylim = c(34, 38.5))
-
-bar_data_zoom_2 <- bar_data_all %>% 
-  filter(long >= -123.5 & long <= -118.5) %>% 
-  filter(lat >= 34 & lat <= 38.5)
-
-len <-  length(bar_data_zoom_2)
-
-plot_list_zoom_2 <- vector("list", length = 66)
-
-for( i in 1:len){
-  temp_data <- bar_data_zoom_2[i,] %>% #working on the selected row
-    dplyr::select(-c(lat, long)) %>%
-    pivot_longer(-estuary_or_subbasin, names_to = "category", values_to = "score")
-  
-  graph_title <- temp_data$estuary_or_subbasin
-
-  test_pie <- ggplot(temp_data, aes(x = category, y = score)) +
-    geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
-    #ggtitle(graph_title) + #trying to add different title to each
-    ylim(0,1)+
-    theme(plot.title = element_text(size = 6, face = "bold"))+
-    theme(axis.title.x = element_blank(), #removing all labels
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
-          panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
-          plot.background = element_rect(fill = "transparent",colour = NA),
-          plot.margin = unit(c(0, 0, 0, 0), "null"),
-          axis.line = element_line()) +
-    coord_fixed(ratio = 5)
-
-    plot_list_zoom_2[[i]] <- test_pie
-
-}
-
-supp_zoom_2 <- (wrap_plots(plot_list_zoom_2[1:len], ncol = 1)) | base_map_zoom_2
-supp_zoom_2
-
-```
-
-
 ```{r, ecology point map}
 
 centroid_points <-  SNAPP_estuary_polygons_centroid %>%
@@ -1414,5 +1393,4 @@ point_map <- ggplot() +
 ```{r, saving figure}
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
 ```
-
 
