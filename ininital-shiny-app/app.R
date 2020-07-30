@@ -74,10 +74,11 @@ ui <- fluidPage(
                  ),
                  
                  #This dropdown controls the category that is being used to determine the size the estuary dots
-                 selectInput(inputId = "aqua_score_size",
-                             label = "Category for Size",
-                             choices = c(Ecology = "Ecology3", Restoration = "Restoration3", Harvest = "Harvest3", "Community" = "Community3")
-                             ),
+                 #It has been decided that the size select is making the map to busy and more difficult to understand so it is being commented out.
+                 #selectInput(inputId = "aqua_score_size",
+                  #           label = "Category for Size",
+                   #          choices = c(Ecology = "Ecology3", Restoration = "Restoration3", Harvest = "Harvest3", "Community" = "Community3")
+                    #         ),
                  
       
                  #This dropdown controls the category that will be filtered with the slide tool
@@ -117,10 +118,10 @@ server <- function(inputs, outputs) {
     #determines the the map desplay
     SNAPP_estuary_map_points <- tm_shape(estuary_shiny()) +
       tm_dots(
-        size = inputs$aqua_score_size,
-        sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
+        size = 0.15,
+        #sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
-        alpha = .85, #this controls the transparency of the points
+        alpha = .7, #this controls the transparency of the points
         col = inputs$aqua_score_color,
         style = "fixed", 
         breaks = c(0, 0.25, 0.5, 0.75, 1),
@@ -129,8 +130,8 @@ server <- function(inputs, outputs) {
         title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
-        clustering = TRUE, #This if for clustering the points when zoomed out
-        legend.size.show = TRUE
+        clustering = FALSE, #This if for clustering the points when zoomed out
+        #legend.size.show = TRUE
         ) +
       tm_legend(
         legend.show = TRUE
