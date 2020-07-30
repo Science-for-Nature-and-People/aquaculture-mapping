@@ -121,12 +121,14 @@ server <- function(inputs, outputs) {
         size = 0.15,
         #sizes.legend = c(0.01, 0.25, 0.5, 0.75, 1),
         scale = 1,
-        alpha = .7, #this controls the transparency of the points
+        alpha = 1, #this controls the transparency of the points
         col = inputs$aqua_score_color,
         style = "fixed", 
         breaks = c(0, 0.25, 0.5, 0.75, 1),
         labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         palette = "Purples", #tmaptools::palette_explorer to find other palettes
+        n = 4,
+        contrast = c(0.1, 0.8),
         title = "Conservation Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
