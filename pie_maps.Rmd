@@ -1046,7 +1046,6 @@ for( i in 1:13){
     plot_list[[i]] <- test_pie
 }
 
-
 # using patchwork to join together
 plot_patch <- wrap_plots(plot_list, ncol = 1, width = 1)
 
@@ -1071,9 +1070,18 @@ testing different layouts
 
 ```{r}
 
-plot_patch <- wrap_plots(plot_list, ncol = 2, width = 1)
+#saving legend as separate object
+simple_barchart_2 <-ggplot(bar_data_long, aes(score, fill = category))+
+         geom_bar()+
+  theme(legend.margin = margin(0, 0, 0, 0))+
+  theme(legend.position = "bottom",
+        legend.box = "horizontal")+
+  facet_wrap(~ category)
 
-plot_patch 
+legend_2 <- get_legend(simple_barchart_2)
+gg_legend_2 <-as_ggplot(legend_2)
+
+plot_patch <- wrap_plots(plot_list, ncol = 2, width = 1)
 
 plot_patch | base_map
 
@@ -1092,9 +1100,10 @@ base_map <- ggplot(coords) +
   geom_text_repel(data = coords, aes(long, lat), 
                   label = coords$ID, 
                   #nudge_x = -126, 
-                  size = 2,
+                  size = 3,
                   min.segment.length = 0,
                   point.padding = NA,
+                  box.padding = 0
                  )
 
 base_map
@@ -1109,13 +1118,17 @@ base_map <- ggplot(coords) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   xlim(c(-130, -115))+
-  ylim(c(30, 53))+
+  ylim(c(30, 53)) +
   # geom_point(aes(long, lat), color = "black")+
   # geom_text(aes(long, lat, label = ID))+
   geom_text_repel(data = coords, aes(long, lat), 
                   label = coords$ID, 
-                  nudge_x = -126, 
-                  segment.size  = 0.2)
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0
+  )
 
 
 bar_data_all <- SNAPP_estuary_polygons_centroid %>% 
@@ -1155,6 +1168,17 @@ for( i in 1:66){
 
 }
 
+#saving legend as separate object
+simple_barchart_2 <-ggplot(bar_data_long, aes(score, fill = category))+
+         geom_bar()+
+  theme(legend.margin = margin(0, 0, 0, 0))+
+  theme(legend.position = "bottom",
+        legend.box = "horizontal")+
+  facet_wrap(~ category)
+
+legend_2 <- get_legend(simple_barchart_2)
+gg_legend_2 <-as_ggplot(legend_2)
+
 # # using patchwork to join together
 # 
 # set_1 <- plot_list_all[1:33]
@@ -1173,7 +1197,8 @@ working on layout
 
 plot_patch <- wrap_plots(plot_list_all, ncol = 11, nrow = 6, width = 1)
 
-prelim_barchart_supplement <- plot_patch | base_map
+prelim_barchart_supplement <- (plot_patch | base_map) / gg_legend_2 +
+  plot_layout(heights = c(7, 1))
 
 prelim_barchart_supplement
 ```
