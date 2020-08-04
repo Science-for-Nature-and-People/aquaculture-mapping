@@ -473,11 +473,11 @@ SNAPP_estuary_polygons$centroid <- st_centroid(SNAPP_estuary_polygons$geometry)
 
 
 #st_centroid needs projection (using NAD83/California Albers)
-SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons %>%
+SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
   st_transform(crs = 3310)
 
 #creating centroid data
-SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>% 
+SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
   st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
 
 ```
