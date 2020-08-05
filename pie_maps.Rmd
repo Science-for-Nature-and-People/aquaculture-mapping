@@ -1,5 +1,5 @@
 ---
-title: "pie_maps"
+title: "Aquacutlure Mapping: pie & barcharts"
 author: "Maggie Klope"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
@@ -41,13 +41,16 @@ library(patchwork)
 library(cowplot)
 library(ggpubr)
 library(ggrepel)
-
+library(mapdata)
+library(ggrepel)
+library(ggimage)
 
 ```
 
-```{r}
+```{r, include=FALSE}
 #data tyding and map info from Robert's markdown file
 
+#data from Robert
 data_goals <- read_csv(here("data", "data_goals.csv"))
 scores_clean <- read_csv(here("data", "scores_clean.csv"))
 
@@ -59,6 +62,8 @@ estuary_sf <- data_scores %>%
   st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
   clean_names()
 
+
+#spatial data from working group
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44")
 
 high_ecology_points <- SNAPP_estuary_points %>%
@@ -82,7 +87,10 @@ mexico <- read_sf(dsn = here("locations"), layer = "mexstates")
 
 ```
  
-```{r}
+### Scatterpie:
+
+```{r scatterpie}
+
 #Using scatterpie to put piecharts over map
 
 #need wide format data
@@ -90,10 +98,6 @@ pie_data <- high_ecology_points %>%
   select(-NCEASmap) %>%
   rename(ecology = Ecol1, restoration = Resto1, harvest = Harvest1, commercial = Comm1) %>%
   as.data.frame()
-
-```
-
-```{r scatterpie}
 
 #using the scores from the 10 estuary/subbasins with radius proportional to Ecological score
 pie_data$radius <- pie_data$ecology/2.5
@@ -124,7 +128,6 @@ Zoom_pie_3 <- ggplot() +
   coord_sf(xlim = c(-120, -115), ylim = c(30, 34.5)) +
   theme_bw()
 
-
 # put it together
 Zoom_pie_ecol_rad <- Zoom_pie_1 + Zoom_pie_2 + Zoom_pie_3
 ggsave("figures/final_map_pie_ecol_rad.png", Zoom_pie_ecol_rad, width = 12, height = 6, dpi = 300)
@@ -132,8 +135,10 @@ ggsave("figures/final_map_pie_ecol_rad.png", Zoom_pie_ecol_rad, width = 12, heig
 ```
 
 ```{r, scatterpie all, fig.align="center",  echo=FALSE}
-# knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
+knitr::include_graphics("figures/final_map_pie_ecol_rad.png")
 ```
+
+#### Scatterpie with fixed radius
 
 ```{r scatterpied fixed}
 #using a fixed radius
@@ -170,12 +175,11 @@ ggsave("figures/final_map_pie_ecol_rad_fixed.png", Zoom_pie_ecol_rad_fixed, widt
 
 ```
 
-```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
-# knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
+```{r, scatterpie all fixed 1, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed.png")
 ```
 
 ```{r}
-
 #testing changing alpha to better view overlapping sites
 
 high_ecology_rest_alpha <- ggplot() +
@@ -192,6 +196,7 @@ high_ecology_rest_alpha
 
 ```
 
+#### Scatterpie with radius proportional to ecology score:
 
 ```{r projection changed - proportional radius}
 # Made scatterplots round by using different map data
@@ -234,6 +239,8 @@ ggsave("figures/final_map_pie_ecol_rad_round.png", Zooms_round, width = 12, heig
 knitr::include_graphics("figures/final_map_pie_ecol_rad_round.png")
 ```
 
+#### Updated scatterpie with fixed radius
+
 ```{r projection changed - fixed radius}
 
 pie_data$radius <- .225
@@ -271,9 +278,13 @@ ggsave("figures/final_map_pie_ecol_rad_fixed_round.png", Zoom_pie_ecol_rad_fixed
 
 ```
 
-```{r, scatterpie all fixed, fig.align="center",  echo=FALSE}
+```{r, scatterpie all fixed 2, fig.align="center",  echo=FALSE}
 knitr::include_graphics("figures/final_map_pie_ecol_rad_fixed_round.png")
 ```
+
+### Leaflet Maps:
+
+#### Using leaflet with pop-up windows of pie charts
 
 ```{r leaflet map}
 #testing out leaflet map for scatterpie plots
@@ -318,7 +329,7 @@ for( i in 1:10){
   geom_bar(width = 1, stat = "identity", show.legend = FALSE)+
     coord_polar("y", start=0)
   
-  print(test_pie)
+  # print(test_pie)
   
   #ggsave(test_pie, file=paste0("figures/pie_plot_", i,".svg"), width = 14, height = 10, units = "cm")
 }
@@ -329,6 +340,9 @@ mapview(estuary_sf,
         popup = popupImage("/figures/pie_plot_1.svg")) #map is created, but images are broken
 
 ```
+
+#### Using leaflet minicharts:
+##### Pie charts:
 
 ```{r leaflet minicharts with picharts}
 #trying leaflet.minicharts: https://cran.r-project.org/web/packages/leaflet.minicharts/vignettes/introduction.html
@@ -347,6 +361,8 @@ leaflet_minichart_pie <- leaflet(pie_data) %>%
 leaflet_minichart_pie
 
 ```
+
+##### Bar charts:
  
 ```{r leaflet minicharts with barcharts}
 
@@ -378,6 +394,8 @@ leaflet_minichart_bar_zoom <- leaflet(pie_data) %>%
 leaflet_minichart_bar_zoom
 
 ```
+ 
+##### Displaying single values:
  
 ```{r leaflet minichart with single values}
 
@@ -443,14 +461,13 @@ leaflet_select
 
 ```
 
-```{r saving leaflet image}
-#trying to save leaflet output as an image
+```{r test: saving leaflet image}
+#testing how to save leaflet output as an image
 
-library(plotly)
-library(htmlwidgets)
-library(webshot)
-library(mapview)
-
+# library(plotly)
+# library(htmlwidgets)
+# library(webshot)
+# library(mapview)
 
 # # first method is using webshot()
 # saveWidget(leaflet_minichart_bar, "temp.html", selfcontained = FALSE)
@@ -465,11 +482,13 @@ library(mapview)
 
 ```
 
+### Checking centroid data against point data
+
 ```{r centroids}
 #testing where the estuary polygon centroids are in relation to points (use st_centroid)
 
-st_geometry(SNAPP_estuary_polygons)
-SNAPP_estuary_polygons$centroid <- st_centroid(SNAPP_estuary_polygons$geometry)
+# st_geometry(SNAPP_estuary_polygons)
+# SNAPP_estuary_polygons$centroid <- st_centroid(SNAPP_estuary_polygons$geometry)
 
 
 #st_centroid needs projection (using NAD83/California Albers)
@@ -477,6 +496,8 @@ SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
   st_transform(crs = 3310)
 
 #creating centroid data
+SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons
+
 SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
   st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
 
@@ -504,71 +525,73 @@ SNAPP_estuary_centroid_points #there is a lot of overlap, but it looks like some
 
 ```
 
-```{r, online example code}
+```{r, testing online example code}
 
-# CDEC station codes to retrieve data for
-stations = c('BDL', 'BLL', 'CSE', 'FLT', 'GOD', 'GZL', 'HON', 'HUN',
-  'IBS', 'MAL', 'MRZ', 'MSL', 'NSL', 'PCT', 'RYC', 'TEA', 'VOL')
-
-# get station locations
-station.locations = map_dfr(stations, cdec_stations) %>%
-  transmute(location_id = toupper(station_id), name,
-    latitude, longitude)
-
-# get station EC data
-station.data = map_dfr(stations, cdec_query, sensor_num = 100L,
-  dur_code = "E", start_date = '2016-09-25',
-  end_date = '2016-11-05') %>%
-  group_by(
-    location_id,
-    datetime = as.POSIXct(round(datetime, 'hours'))
-  ) %>%
-  summarize(mean = mean(parameter_value, na.rm = TRUE)) %>%
-  mutate(windowmean = rollmean(mean, 25, 'center')) %>%
-  ungroup()
-
-# make a separate ggplot for each station
-station.plots = station.data %>%
-  nest(-location_id) %>%
-  mutate(plot = map2(data, location_id,
-    ~ ggplot(.x) + ggtitle(.y) + theme_bw(base_size = 8) +
-    aes(x = datetime, y = windowmean) + geom_line() +
-    scale_x_datetime(NULL, breaks = as.POSIXct(c("2016-10-01",
-      "2016-10-15", "2016-10-31")), date_labels = "%b %d",
-      limits = as.POSIXct(c("2016-10-01", "2016-10-31"))) +
-    scale_y_continuous("Spec. Conductivity",
-      limits = c(4000, 30000))
-    )
-  )
-
-#get station point data
-station.points = st_as_sf(station.locations, crs = 4326,
-  coords = c("longitude", "latitude")) %>%
-  st_transform(3857)
-
-#create annotation
-station.annotations = station.points %>%
-  bind_cols(as_tibble(st_coordinates(.))) %>%
-  st_drop_geometry() %>%
-  select(location_id, X, Y) %>%
-  left_join(station.plots, by = "location_id") %>%
-  mutate(annotation = pmap(list(X, Y, plot),
-    ~ annotation_custom(ggplotGrob(..3), #convert each plot to a grob via ggplotGrob 
-      xmin = ..1 - 2000, xmax = ..1 + 2000, #explicitly defining the bounding box of each annotation layer.
-      ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
-  pull(annotation)
-
-#create map
-ggplot(station.points) +
-  xlim(c(-13598000, -13563500)) +
-  #annotation_map_tile(zoom = 13) +
-  station.annotations
+# # CDEC station codes to retrieve data for
+# stations = c('BDL', 'BLL', 'CSE', 'FLT', 'GOD', 'GZL', 'HON', 'HUN',
+#   'IBS', 'MAL', 'MRZ', 'MSL', 'NSL', 'PCT', 'RYC', 'TEA', 'VOL')
+# 
+# # get station locations
+# station.locations = map_dfr(stations, cdec_stations) %>%
+#   transmute(location_id = toupper(station_id), name,
+#     latitude, longitude)
+# 
+# # get station EC data
+# station.data = map_dfr(stations, cdec_query, sensor_num = 100L,
+#   dur_code = "E", start_date = '2016-09-25',
+#   end_date = '2016-11-05') %>%
+#   group_by(
+#     location_id,
+#     datetime = as.POSIXct(round(datetime, 'hours'))
+#   ) %>%
+#   summarize(mean = mean(parameter_value, na.rm = TRUE)) %>%
+#   mutate(windowmean = rollmean(mean, 25, 'center')) %>%
+#   ungroup()
+# 
+# # make a separate ggplot for each station
+# station.plots = station.data %>%
+#   nest(-location_id) %>%
+#   mutate(plot = map2(data, location_id,
+#     ~ ggplot(.x) + ggtitle(.y) + theme_bw(base_size = 8) +
+#     aes(x = datetime, y = windowmean) + geom_line() +
+#     scale_x_datetime(NULL, breaks = as.POSIXct(c("2016-10-01",
+#       "2016-10-15", "2016-10-31")), date_labels = "%b %d",
+#       limits = as.POSIXct(c("2016-10-01", "2016-10-31"))) +
+#     scale_y_continuous("Spec. Conductivity",
+#       limits = c(4000, 30000))
+#     )
+#   )
+# 
+# #get station point data
+# station.points = st_as_sf(station.locations, crs = 4326,
+#   coords = c("longitude", "latitude")) %>%
+#   st_transform(3857)
+# 
+# #create annotation
+# station.annotations = station.points %>%
+#   bind_cols(as_tibble(st_coordinates(.))) %>%
+#   st_drop_geometry() %>%
+#   select(location_id, X, Y) %>%
+#   left_join(station.plots, by = "location_id") %>%
+#   mutate(annotation = pmap(list(X, Y, plot),
+#     ~ annotation_custom(ggplotGrob(..3), #convert each plot to a grob via ggplotGrob 
+#       xmin = ..1 - 2000, xmax = ..1 + 2000, #explicitly defining the bounding box of each annotation layer.
+#       ymin = ..2 - 1000, ymax = ..2 + 1000))) %>%
+#   pull(annotation)
+# 
+# #create map
+# ggplot(station.points) +
+#   xlim(c(-13598000, -13563500)) +
+#   #annotation_map_tile(zoom = 13) +
+#   station.annotations
 
 ```
 
+### Using ggplot annotation method to place barcharts on map:
+
+#### Testing:
 
 ```{r, barcharts on map}
-library(mapdata)
 
 #Trying to overlay barcharts on a static ggplot map
 bar_data <-  data_scores %>%
@@ -635,7 +658,9 @@ ggplot(plot_points) +
 
 ```
 
-Trying ggrepel to prevent overlap using ggrepel::repel_boxes() following example from [here](http://zachcp.org/blog/2016/ggrepelmaps/) and [here](https://github.com/slowkow/ggrepel/issues/24)
+#### Draft of barchart map of 13 high ecology sites for publication:
+
+Using ggrepel to prevent overlap using ggrepel::repel_boxes() following example from [here](http://zachcp.org/blog/2016/ggrepelmaps/) and [here](https://github.com/slowkow/ggrepel/issues/24)
 
 ```{r, barcharts on map with offsets}
 coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
@@ -663,12 +688,9 @@ bar_data_long <- bar_data %>%
 #   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
 #   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
-# point_data <-  data_scores %>%
-#   drop_na("long") %>% 
-#   select(estuary_or_subbasin, lat, long)
-
-library(ggrepel)
-library(ggimage)
+point_data <-  data_scores %>%
+  drop_na("long") %>%
+  select(estuary_or_subbasin, lat, long)
 
 #' Given a Set of Points and Box sizes, find locations
 #' Written by @zachp, updated by @slowkow
@@ -808,168 +830,168 @@ bar_charts_offset + gg_legend +
 
 ```
 
-Trying example from above but choosing an offset for long
+Testing example from above but choosing an offset for long:
 
 ```{r, barchart on map split left and right}
-
-# Making two datasets with selecting sites from every other row
-bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
-  drop_na("long") %>% 
-  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-  mutate(long_offset = long - 2)
-
-bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
-  drop_na("long") %>% 
-  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-  mutate(long_offset = long + 2)
-
-#merging together
-merged_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
-  mutate(lat_offset = lat)
-
-# taking offset lat long and creating a geometry
-offset_points <- st_as_sf(merged_offset, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
-  select(estuary_or_subbasin, geometry)
-
-# make a separate ggplot for each estuary:
-test_plots <- bar_data %>% 
-  group_by(estuary_or_subbasin) %>% 
-  nest() %>%
-  mutate(plot = map2(data, estuary_or_subbasin,
-                     ~ggplot(data = .x) +
-                       aes(x = category, y = score) +
-                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
-                       theme(axis.title.x=element_blank(), #removing all labels
-                             axis.text.x=element_blank(),
-                             axis.ticks.x=element_blank(),
-                             axis.title.y=element_blank(),
-                             axis.text.y=element_blank(),
-                             axis.ticks.y=element_blank(),
-                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
-                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
-                             plot.background = element_rect(fill = "transparent",colour = NA),
-                             plot.margin = unit(c(0, 0, 0, 0), "null"),
-                             axis.line = element_line())
-                          
-           )
-         )
-
-# turn the plots into annotations: 
-estuary_annotation <- offset_points %>% 
-  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
-  st_drop_geometry() %>% #removes geometry from sf object
-  left_join(test_plots, by = "estuary_or_subbasin") %>% 
-  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
-                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
-                                              xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
-                                              ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
-  pull(annotation)
-
-# make ggplot and add list of notations
-ggplot(offset_points) +
-  geom_sf(data = us_boundaries()) +
-  geom_sf(data = canada) + 
-  xlim(c(-130, -115))+
-  ylim(c(30, 53))+
-  geom_segment(data = merged_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
-  geom_point(data = merged_offset, aes(long, lat), color = "black") +
-  geom_point(data = merged_offset, aes(long_offset, lat_offset), color = "black") +
-  estuary_annotation
+# 
+# # Making two datasets with selecting sites from every other row
+# bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
+#   drop_na("long") %>% 
+#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+#   mutate(long_offset = long - 2)
+# 
+# bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
+#   drop_na("long") %>% 
+#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+#   mutate(long_offset = long + 2)
+# 
+# #merging together
+# merged_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
+#   mutate(lat_offset = lat)
+# 
+# # taking offset lat long and creating a geometry
+# offset_points <- st_as_sf(merged_offset, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
+#   select(estuary_or_subbasin, geometry)
+# 
+# # make a separate ggplot for each estuary:
+# test_plots <- bar_data %>% 
+#   group_by(estuary_or_subbasin) %>% 
+#   nest() %>%
+#   mutate(plot = map2(data, estuary_or_subbasin,
+#                      ~ggplot(data = .x) +
+#                        aes(x = category, y = score) +
+#                        geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+#                        theme(axis.title.x=element_blank(), #removing all labels
+#                              axis.text.x=element_blank(),
+#                              axis.ticks.x=element_blank(),
+#                              axis.title.y=element_blank(),
+#                              axis.text.y=element_blank(),
+#                              axis.ticks.y=element_blank(),
+#                              panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+#                              panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+#                              plot.background = element_rect(fill = "transparent",colour = NA),
+#                              plot.margin = unit(c(0, 0, 0, 0), "null"),
+#                              axis.line = element_line())
+#                           
+#            )
+#          )
+# 
+# # turn the plots into annotations: 
+# estuary_annotation <- offset_points %>% 
+#   bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+#   st_drop_geometry() %>% #removes geometry from sf object
+#   left_join(test_plots, by = "estuary_or_subbasin") %>% 
+#   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+#                            ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+#                                               xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
+#                                               ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
+#   pull(annotation)
+# 
+# # make ggplot and add list of notations
+# ggplot(offset_points) +
+#   geom_sf(data = us_boundaries()) +
+#   geom_sf(data = canada) + 
+#   xlim(c(-130, -115))+
+#   ylim(c(30, 53))+
+#   geom_segment(data = merged_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+#   geom_point(data = merged_offset, aes(long, lat), color = "black") +
+#   geom_point(data = merged_offset, aes(long_offset, lat_offset), color = "black") +
+#   estuary_annotation
 
 ```
 
-Trying manual offset put through the geom_boxes function
+Testing manual offset put through the geom_boxes function:
 
 ```{r, manual offsets}
-# Making two datasets with selecting sites from every other row
-bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
-  drop_na("long") %>% 
-  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-  mutate(long_offset = long - 2)
-
-bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
-  drop_na("long") %>% 
-  select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-  mutate(long_offset = long + 2)
-
-#merging together
-manual_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
-  mutate(lat_offset = lat)
-
-function_offset <- findboxes(manual_offset,
-  xcol = "long_offset", ycol = "lat_offset",
-  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .75,
-  box_padding_y = Reduce("-", rev(range(point_data$long))) * .5,
-  point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
-  point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
-  force = 1e-2, #force = repulsion
-  xlim = c(-130, -115),
-  ylim = c(30, 53)
-)
-
-function_offset$estuary_or_subbasin <- manual_offset$estuary_or_subbasin
-  
-function_offset_clean <- function_offset %>% 
-  rename(lat_offset = y2, long_offset = x2) %>% 
-  select(-c(x1, y1))
-
-#adding offset values to bar_data
-final_offset <- manual_offset %>% 
-  dplyr::select(-c(lat_offset, long_offset)) %>% 
-  merge(function_offset_clean, by = "estuary_or_subbasin")
-
-# taking offset lat long and creating a geometry
-final_offset_points <- st_as_sf(function_offset_clean, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
-  select(estuary_or_subbasin, geometry)
-
-# make a separate ggplot for each estuary:
-test_plots <- bar_data %>% 
-  group_by(estuary_or_subbasin) %>% 
-  nest() %>%
-  mutate(plot = map2(data, estuary_or_subbasin,
-                     ~ggplot(data = .x) +
-                       aes(x = category, y = score) +
-                       geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
-                       theme(axis.title.x=element_blank(), #removing all labels
-                             axis.text.x=element_blank(),
-                             axis.ticks.x=element_blank(),
-                             axis.title.y=element_blank(),
-                             axis.text.y=element_blank(),
-                             axis.ticks.y=element_blank(),
-                             panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
-                             panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
-                             plot.background = element_rect(fill = "transparent",colour = NA),
-                             plot.margin = unit(c(0, 0, 0, 0), "null"),
-                             axis.line = element_line())
-                          
-           )
-         )
-
-# turn the plots into annotations: 
-estuary_annotation <- final_offset_points %>% 
-  bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
-  st_drop_geometry() %>% #removes geometry from sf object
-  left_join(test_plots, by = "estuary_or_subbasin") %>% 
-  mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
-                           ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
-                                              xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
-                                              ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
-  pull(annotation)
-
-# make ggplot and add list of notations
-ggplot(final_offset_points) +
-  geom_sf(data = us_boundaries()) +
-  geom_sf(data = canada) + 
-  xlim(c(-130, -115))+
-  ylim(c(30, 53))+
-  geom_segment(data = final_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
-  geom_point(data = final_offset, aes(long, lat), color = "black") +
-  geom_point(data = final_offset, aes(long_offset, lat_offset), color = "black") +
-  estuary_annotation
+# # Making two datasets with selecting sites from every other row
+# bar_data_1 <-  data_scores[seq(1, nrow(data_scores), 2), ] %>%
+#   drop_na("long") %>% 
+#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+#   mutate(long_offset = long - 2)
+# 
+# bar_data_2 <-  data_scores[seq(2, nrow(data_scores), 2), ] %>%
+#   drop_na("long") %>% 
+#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
+#   mutate(long_offset = long + 2)
+# 
+# #merging together
+# manual_offset <- bind_rows(bar_data_1, bar_data_2) %>% 
+#   mutate(lat_offset = lat)
+# 
+# function_offset <- findboxes(manual_offset,
+#   xcol = "long_offset", ycol = "lat_offset",
+#   box_padding_x = Reduce("-", rev(range(point_data$lat))) * .75,
+#   box_padding_y = Reduce("-", rev(range(point_data$long))) * .5,
+#   point_padding_x = Reduce("-", rev(range(point_data$long))) * 1,
+#   point_padding_y = Reduce("-", rev(range(point_data$lat))) * 1,
+#   force = 1e-2, #force = repulsion
+#   xlim = c(-130, -115),
+#   ylim = c(30, 53)
+# )
+# 
+# function_offset$estuary_or_subbasin <- manual_offset$estuary_or_subbasin
+#   
+# function_offset_clean <- function_offset %>% 
+#   rename(lat_offset = y2, long_offset = x2) %>% 
+#   select(-c(x1, y1))
+# 
+# #adding offset values to bar_data
+# final_offset <- manual_offset %>% 
+#   dplyr::select(-c(lat_offset, long_offset)) %>% 
+#   merge(function_offset_clean, by = "estuary_or_subbasin")
+# 
+# # taking offset lat long and creating a geometry
+# final_offset_points <- st_as_sf(function_offset_clean, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
+#   select(estuary_or_subbasin, geometry)
+# 
+# # make a separate ggplot for each estuary:
+# test_plots <- bar_data %>% 
+#   group_by(estuary_or_subbasin) %>% 
+#   nest() %>%
+#   mutate(plot = map2(data, estuary_or_subbasin,
+#                      ~ggplot(data = .x) +
+#                        aes(x = category, y = score) +
+#                        geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+#                        theme(axis.title.x=element_blank(), #removing all labels
+#                              axis.text.x=element_blank(),
+#                              axis.ticks.x=element_blank(),
+#                              axis.title.y=element_blank(),
+#                              axis.text.y=element_blank(),
+#                              axis.ticks.y=element_blank(),
+#                              panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+#                              panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+#                              plot.background = element_rect(fill = "transparent",colour = NA),
+#                              plot.margin = unit(c(0, 0, 0, 0), "null"),
+#                              axis.line = element_line())
+#                           
+#            )
+#          )
+# 
+# # turn the plots into annotations: 
+# estuary_annotation <- final_offset_points %>% 
+#   bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
+#   st_drop_geometry() %>% #removes geometry from sf object
+#   left_join(test_plots, by = "estuary_or_subbasin") %>% 
+#   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
+#                            ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
+#                                               xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
+#                                               ymin = ..2 - 0, ymax = ..2 + 2))) %>% # ..2 refers to Y
+#   pull(annotation)
+# 
+# # make ggplot and add list of notations
+# ggplot(final_offset_points) +
+#   geom_sf(data = us_boundaries()) +
+#   geom_sf(data = canada) + 
+#   xlim(c(-130, -115))+
+#   ylim(c(30, 53))+
+#   geom_segment(data = final_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
+#   geom_point(data = final_offset, aes(long, lat), color = "black") +
+#   geom_point(data = final_offset, aes(long_offset, lat_offset), color = "black") +
+#   estuary_annotation
 
 ```
 
-Trying example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map)
+Testing example from [here](https://stackoverflow.com/questions/59413256/any-way-to-plot-multiple-barplots-on-a-map):
 
 ```{r, example from stack overflow}
 mp <-  NULL
@@ -998,7 +1020,7 @@ print(final)
 
 ```
 
-###Making large plot to go in supplemental materials
+### Supplemental materials bar chart map:
 
 testing using just the 13 points:
 ```{r, supplemental figure testing}
@@ -1066,7 +1088,7 @@ plot_patch | base_map
 
 ```
 
-testing different layouts
+testing different layouts:
 
 ```{r}
 
@@ -1087,8 +1109,9 @@ plot_patch | base_map
 
 ```
 
-Trying it with all 66 centroids
+#### Trying it with all 66 centroids:
 
+basemap with geom_text repel to reduce overlap (still needs work)
 ```{r, base map}
 base_map <- ggplot(coords) +
   geom_sf(data = us_boundaries()) +
@@ -1109,7 +1132,7 @@ base_map <- ggplot(coords) +
 base_map
 
 ```
-
+#### Draft of supplementary bar chart map for 66 sites:
 
 ```{r, supplemental figure all sites}
 coords$ID <- seq.int(nrow(coords))
@@ -1191,23 +1214,24 @@ gg_legend_2 <-as_ggplot(legend_2)
 
 ```
 
-working on layout
-
 ```{r}
+#working on layout
 
 plot_patch <- wrap_plots(plot_list_all, ncol = 11, nrow = 6, width = 1)
 
 prelim_barchart_supplement <- (plot_patch | base_map) / gg_legend_2 +
   plot_layout(heights = c(7, 1))
-
-prelim_barchart_supplement
 ```
 
-```{r}
-ggsave("figures/prelim_barchart_supplement .png", prelim_barchart_supplement, width = 12, height = 6, dpi = 300)
+```{r, include = FALSE}
+ggsave("figures/prelim_barchart_supplement.png", prelim_barchart_supplement, width = 12, height = 6, dpi = 300)
 ```
 
-Making zoom panels
+```{r, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/prelim_barchart_supplement.png")
+```
+
+#### Testing making zoomed-in maps:
 
 ```{r}
 coords$ID <- seq.int(nrow(coords))
@@ -1348,16 +1372,17 @@ supp_zoom_3 <- (wrap_plots(plot_list_zoom_3[1:28], ncol = 1)) | base_map_zoom_3
 
 ```
 
-```{r}
+```{r, include = FALSE}
 ggsave("figures/supp_zoom_1.png", supp_zoom_1, width = 12, height = 6, dpi = 300)
 ggsave("figures/supp_zoom_2.png", supp_zoom_2, width = 12, height = 6, dpi = 300)
 ggsave("figures/supp_zoom_3.png", supp_zoom_3, width = 12, height = 6, dpi = 300)
 ```
 
-# making a function that takes the lat/long limits and tidys data, makes barcharts, and assembles map
+#### Testing making a function that takes the lat/long limits and tidys data, makes barcharts, and assembles map
 - currently outputting the wrong number of bar charts when compared to the map and the zooms done above.
+- also getting error: Removed n rows containing missing values (position_stack).
 
-```{r}
+```{r, error = FALSE}
 coords$ID <- seq.int(nrow(coords)) #making a row of numbers to use for point labels
 
 supplement_figures <- function(x1, x2, y1, y2){
@@ -1414,7 +1439,9 @@ sup_zoom_funct
 
 ```
 
-```{r, ecology point map}
+### Draft point map for supplementary materials:
+
+```{r, ecology point map, error = FALSE}
 
 centroid_points <-  SNAPP_estuary_polygons_centroid %>%
   select(Estuary_Na, Ecol1, Restor1, Harvest1, Comm1) %>%
@@ -1441,9 +1468,11 @@ point_map <- ggplot() +
   guides(size = FALSE)+ #removing size from legend
   theme_void()
 
+ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
+
 ```
 
-```{r, saving figure}
-ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
+```{r, fig.align="center",  echo=FALSE}
+knitr::include_graphics("figures/point_map.png")
 ```
 
