@@ -48,11 +48,13 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_
   
   
 ##########################################################################################################################################  
-  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, 
+  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1 
          #"Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1
          ) %>%
   select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3) 
+  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2
+         #-Ecology3, -Restoration3, -Harvest3, -Community3
+         ) 
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
 
@@ -129,10 +131,15 @@ server <- function(inputs, outputs) {
         #palette = "Purples", #tmaptools::palette_explorer to find other palettes
         n = 4,
         contrast = c(0.1, 0.8),
-        title = "Ecology Score", 
+        title = case_when(
+          inputs$aqua_score_color == "Ecology" ~ "Ecology Score",
+          inputs$aqua_score_color == "Restoration" ~ "Restoration Score",
+          inputs$aqua_score_color == "Harvest" ~ "Harvest Score",
+          inputs$aqua_score_color == "Community" ~ "Community Score"
+        ),
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
-        clustering = FALSE, #This if for clustering the points when zoomed out
+        clustering = FALSE #This if for clustering the points when zoomed out
         #legend.size.show = TRUE
         ) +
       tm_legend(
