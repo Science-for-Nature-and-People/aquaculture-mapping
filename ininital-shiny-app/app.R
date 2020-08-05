@@ -57,6 +57,12 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_
          ) 
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
+basemap_imagery <- tm_basemap("Esri.WorldImagery")
+basemap_physical <- tm_basemap("Esri.WorldPhysical")
+basemap_gray <- tm_basemap("Esri.WorldGrayCanvas")
+basemap_topo <- tm_basemap("Esri.WorldTopoMap")
+
+
 
 text <- as.character("Click points to see more information.")
 
@@ -150,7 +156,11 @@ server <- function(inputs, outputs) {
       tm_legend(
         legend.show = TRUE
                 ) +
-      basemap_streets
+      basemap_topo +
+      basemap_streets +
+      basemap_imagery +
+      basemap_physical +
+      basemap_gray 
     tmap_leaflet(SNAPP_estuary_map_points)
 
     
