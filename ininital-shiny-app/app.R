@@ -48,7 +48,9 @@ SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_
   
   
 ##########################################################################################################################################  
-  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, "Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1) %>%
+  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1, 
+         #"Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1
+         ) %>%
   select(-NCEAM) %>%
   gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2, -Ecology3, -Restoration3, -Harvest3, -Community3) 
 
@@ -124,10 +126,10 @@ server <- function(inputs, outputs) {
         style = "fixed", 
         breaks = c(0, 0.25, 0.5, 0.75, 1),
         labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
-        palette = "Purples", #tmaptools::palette_explorer to find other palettes
+        #palette = "Purples", #tmaptools::palette_explorer to find other palettes
         n = 4,
         contrast = c(0.1, 0.8),
-        title = "Conservation Score", 
+        title = "Ecology Score", 
         id = "Estuary_Na",
         popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
         clustering = FALSE, #This if for clustering the points when zoomed out
