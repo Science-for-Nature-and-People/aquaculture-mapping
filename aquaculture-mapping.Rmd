@@ -443,6 +443,14 @@ st_crs(SNAPP_estuary_polygons)
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44")
 head(SNAPP_estuary_points)
 
+
+#To be updated when the final data becomes available
+SNAPP_estuary_centroids <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
+  st_transform(crs = 3310) %>%
+  st_centroid(geometry)
+
+sf::st_write(SNAPP_estuary_centroids, "locations/SNAPP_estuary_centroids.shp")
+
 ```
 
 ```{r}
