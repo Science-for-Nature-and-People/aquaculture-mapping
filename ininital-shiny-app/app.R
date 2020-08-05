@@ -24,9 +24,7 @@ library(leafpop)
 
 
 #This reads in the data and formats to be used by the shiny app
-SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
-  st_transform(crs = 3310) %>%
-  st_centroid(geometry) %>%
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_centroids") %>%
 #############################################################################################################################
   
 #This section of the code is only going to be for the preliminary data, with the final data this will not be needed. #This is to make all of the scores thata re less than zero go to zero.
