@@ -128,12 +128,12 @@ server <- function(inputs, outputs) {
         style = "fixed", 
         breaks = c(0, 0.25, 0.5, 0.75, 1),
         labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
-        #palette = #case_when( #tmaptools::palette_explorer() to find other palettes
-        #  inputs$aqua_score_color == "Ecology" ~ "Greens",
-         # inputs$aqua_score_color == "Restoration" ~ "Blues",
-          #inputs$aqua_score_color == "Harvest" ~ "Oranges",
-          #inputs$aqua_score_color == "Community" ~ "Purples"
-          #), 
+        palette = case_when( #tmaptools::palette_explorer() to find other palettes
+          inputs$aqua_score_color == "Ecology2" ~ "Greens",
+          inputs$aqua_score_color == "Restoration2" ~ "Blues",
+          inputs$aqua_score_color == "Harvest2" ~ "Oranges",
+          inputs$aqua_score_color == "Community2" ~ "Purples"
+          ), 
         n = 4,
         contrast = c(0.1, 0.8),
         title = case_when(
