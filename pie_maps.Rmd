@@ -33,7 +33,7 @@ library(magick)
 library(ggmap)
 library(maps)
 #remotes::install_github("flowwest/CDECRetrieve")
-library(CDECRetrieve)
+#library(CDECRetrieve)
 library(purrr)
 library(zoo)
 library(ggspatial)
@@ -1285,12 +1285,13 @@ base_map_zoom_3 <- ggplot(coords) +
   geom_text(aes(long, lat, label = coords$ID, color = "blue"))+
   theme(legend.position = "none")
 
-(all_sites_wrap / gg_legend_2) | (base_map_zoom_1 / base_map_zoom_2 /  base_map_zoom_3)
+(all_sites_wrap / gg_legend_2) + (base_map_zoom_1 | base_map_zoom_2 |  base_map_zoom_3)
 
-all_sites_wrap | (base_map_zoom_1 / base_map_zoom_2) | base_map_zoom_3
+all_sites_wrap + (base_map_zoom_1 / base_map_zoom_2) + base_map_zoom_3 +
+  
 
-all_sites_wrap | base_map_zoom_1 | base_map_zoom_2 | base_map_zoom_3
-
+all_sites_wrap + base_map_zoom_1 + base_map_zoom_2 + base_map_zoom_3 +
+  plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
 ```
 
 ```{r}
