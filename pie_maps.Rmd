@@ -1235,6 +1235,7 @@ all_sites_wrap <- ggplot(bar_data_66_long, aes(x = category, y = score)) +
   # ggtitle(graph_title) + #trying to add different title to each
   ylim(0,1)+
   # theme(plot.title = element_text(size = 6, face = "bold"))+
+  facet_wrap(~ID, ncol = 11, nrow = 6)+
   theme(axis.title.x = element_blank(), #removing all labels
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
@@ -1248,9 +1249,10 @@ all_sites_wrap <- ggplot(bar_data_66_long, aes(x = category, y = score)) +
         panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
         plot.background = element_rect(fill = "transparent",colour = NA),
         plot.margin = unit(c(0, 0, 0, 0), "null"),
-        axis.line = element_line()) +
-  coord_fixed(ratio = 5)+
-  facet_wrap(~ID, ncol = 11, nrow = 6)
+        axis.line = element_line(),
+        strip.text = element_text(size = 7),#changing title font size for face_wrap()
+        axis.text.y = element_text(size = 6)) + #changing y-axis font size
+  coord_fixed(ratio = 5)
 
 all_sites_wrap
 
@@ -1260,47 +1262,94 @@ all_sites_wrap
 
 ```{r}
 
-base_map_zoom_1 <- ggplot(coords) +
+base_map_zoom_1_data <- coords %>% 
+  dplyr::filter(long > -125.5 & long < -121) %>% 
+  dplyr::filter(lat > 40 & lat < 49.5 )
+
+base_map_zoom_2_data <- coords %>% 
+dplyr::filter(long > -123.5 & long < -119.5) %>% 
+  dplyr::filter(lat > 35 & lat < 39 )
+
+base_map_zoom_3_data <- coords %>% 
+  dplyr::filter(long < -116 & long > -120) %>% 
+  dplyr::filter(lat < 35 & lat > 30)
+
+base_map_zoom_1 <- ggplot(base_map_zoom_1_data) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   # geom_point(aes(long, lat), color = "black")+
   coord_sf(xlim = c(-125.5, -121), ylim = c(40, 49.5))+
-  geom_text(aes(long, lat, label = coords$ID, color = "blue"))+
-  theme(legend.position = "none")
+  # geom_text(aes(long, lat, label = base_map_zoom_1_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_1_data, aes(long, lat), 
+                  label = base_map_zoom_1_data$ID, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis
 
-base_map_zoom_2 <- ggplot(coords) +
+base_map_zoom_2 <- ggplot(base_map_zoom_2_data) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   # geom_point(aes(long, lat), color = "black")+
   coord_sf(xlim = c(-123.5, -119.5), ylim = c(35, 39))+
-  geom_text(aes(long, lat, label = coords$ID, color = "blue"))+
-  theme(legend.position = "none")
+  # geom_text(aes(long, lat, label = base_map_zoom_2_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_2_data, aes(long, lat), 
+                  label = base_map_zoom_2_data$ID, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
 
-base_map_zoom_3 <- ggplot(coords) +
+base_map_zoom_3 <- ggplot(base_map_zoom_3_data) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
   geom_sf(data = mexico) +
-  # geom_point(aes(long, lat), color = "black")+
   coord_sf(xlim = c(-120, -116), ylim = c(30, 35))+
-  geom_text(aes(long, lat, label = coords$ID, color = "blue"))+
-  theme(legend.position = "none")
+  geom_text_repel(data = base_map_zoom_3_data, aes(long, lat), 
+                  label = base_map_zoom_3_data$ID, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
 
-(all_sites_wrap / gg_legend_2) + (base_map_zoom_1 | base_map_zoom_2 |  base_map_zoom_3)
-
-all_sites_wrap + (base_map_zoom_1 / base_map_zoom_2) + base_map_zoom_3 +
-  
-
-all_sites_wrap + base_map_zoom_1 + base_map_zoom_2 + base_map_zoom_3 +
-  plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
 ```
 
 ```{r}
 #working on layout
 
-plot_patch <- wrap_plots(plot_list_all, ncol = 11, nrow = 6, width = 1)
+# plot_patch <- wrap_plots(plot_list_all, ncol = 11, nrow = 6, width = 1)
 
-prelim_barchart_supplement <- (plot_patch | base_map) / gg_legend_2 +
-  plot_layout(heights = c(7, 1))
+# prelim_barchart_supplement <- (plot_patch | base_map) / gg_legend_2 +
+#   plot_layout(heights = c(7, 1))
+
+# (all_sites_wrap / gg_legend_2) + (base_map_zoom_1 | base_map_zoom_2 |  base_map_zoom_3)
+
+# all_sites_wrap + (base_map_zoom_1 / base_map_zoom_2) + base_map_zoom_3
+  
+# all_sites_wrap + base_map_zoom_1 + base_map_zoom_2 + base_map_zoom_3 +
+#   plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
+# 
+
+prelim_barchart_supplement <- all_sites_wrap + base_map_zoom_1 + (base_map_zoom_2 / base_map_zoom_3) +
+  plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 2))
 
 prelim_barchart_supplement
 ```
