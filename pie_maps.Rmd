@@ -744,7 +744,7 @@ df1 <- findboxes(coords_high_ecol,
   box_padding_y = Reduce("-", rev(range(point_data$long))) * .55,
   point_padding_x = Reduce("-", rev(range(point_data$long))) * .5,
   point_padding_y = Reduce("-", rev(range(point_data$lat))) * .55,
-  force = 1e-4, #force = repulsion
+  force = 1e-3, #force = repulsion
   xlim = c(-120, -112),
   ylim = c(27, 55)
 )
@@ -802,7 +802,10 @@ simple_barchart <-ggplot(bar_data_long, aes(score, fill = category))+
   theme(legend.margin = margin(0, 0, 0, 0))+
   theme(
     legend.title = element_text(size = 7),
-    legend.text = element_text(size = 7))
+    legend.text = element_text(size = 7),
+    legend.background = element_rect(fill = NA))+
+  scale_fill_discrete(name = "Score", labels = c("Commercial Production", "Ecological", "Community Engagement Harvest", "Community Engagement Restoration"))
+
 legend <- get_legend(simple_barchart)
 gg_legend <-as_ggplot(legend)
 
@@ -815,8 +818,9 @@ bar_charts_offset <- ggplot(offset_points) +
   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
-  #geom_bar(data = bar_data_long, aes(score, fill = category))+
-  estuary_annotation
+  # geom_bar(data = bar_data_long, aes(score, fill = category))+
+  estuary_annotation +
+  theme_void()
 
 # bar_charts_offset + (plot_spacer() / (gg_legend + plot_spacer() + plot_spacer())) +plot_layout(nrow=1)
 
@@ -825,9 +829,16 @@ layout <- c(
   area(t = 8, l = 1, b = 8, r = 6)
 )
 
-bar_charts_offset + gg_legend + 
+bar_chart_map <- bar_charts_offset + gg_legend + 
   plot_layout(design = layout)
 
+bar_chart_map
+
+```
+
+
+```{r, include = FALSE}
+ggsave("figures/bar_chart_map.png", bar_chart_map, width = 12, height = 6, dpi = 300)
 ```
 
 Testing example from above but choosing an offset for long:
@@ -1348,10 +1359,9 @@ base_map_zoom_3 <- ggplot(base_map_zoom_3_data) +
 #   plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
 # 
 
-prelim_barchart_supplement <- all_sites_wrap + base_map_zoom_1 + (base_map_zoom_2 / base_map_zoom_3) +
+prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_3) +
   plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 2))
 
-prelim_barchart_supplement
 ```
 
 ```{r, include = FALSE}
