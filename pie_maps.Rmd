@@ -37,12 +37,10 @@ library(CDECRetrieve)
 library(purrr)
 library(zoo)
 library(ggspatial)
-library(patchwork)
 library(cowplot)
 library(ggpubr)
 library(ggrepel)
 library(mapdata)
-library(ggrepel)
 library(ggimage)
 
 ```
