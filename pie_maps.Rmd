@@ -48,42 +48,30 @@ library(ggimage)
 ```
 
 ```{r, include=FALSE}
-# data tyding and map info from Robert's markdown file
+#data tyding and map info from Robert's markdown file
 
-# data from Robert
-# data_goals <- read_csv(here("data", "data_goals.csv"))
-# scores_clean <- read_csv(here("data", "scores_clean.csv"))
-# 
-# data_scores <- full_join(data_goals, scores_clean) %>%
-#   clean_names()
+#data from Robert
+data_goals <- read_csv(here("data", "data_goals.csv"))
 
-# estuary_sf <- data_scores %>%
-#   drop_na("long") %>%
-#   st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
-#   clean_names()
+scores_clean <- read_csv(here("data", "scores_clean.csv"))
 
-```
+data_scores <- full_join(data_goals, scores_clean) %>%
+  clean_names()
 
-
-```{r, include=FALSE}
-# New Data from Ted
-data_scores <- read_csv(here("data", "Aquaculture_Score_for_Figs.csv"))
+estuary_sf <- data_scores %>%
+  drop_na("long") %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
+  clean_names()
 
 #spatial data from working group
-SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>% 
-  dplyr::select(Name, Latitude, Longitude) %>% 
-  rename(Estuary = Name)
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44")
 
-estuary_sf <- left_join(data_scores, SNAPP_estuary_points, by = "Estuary") 
+high_ecology_points <- SNAPP_estuary_points %>%
+  filter(Ecol1 >= 0.5)
 
-high_ecology_points <- estuary_sf %>%
-  filter(Ecological_Priority >= 0.5)
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66")
 
-SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
-  rename(Estuary = Estuary_Na)
-
-# estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons, by = "Estuary")
-
+# map layers from Robert's code
 ca_counties <- read_sf(dsn = here("locations"), layer = "CA_counties")
 or_counties <- read_sf(dsn = here("locations"), layer = "OR_counties")
 wa_counties <- read_sf(dsn = here("locations"), layer = "WA_counties")
@@ -514,7 +502,7 @@ SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons
 SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
   st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
 
-SNAPP_estuary_polygons_centroid$Estuary_Na
+SNAPP_estuary_polygons_centroid$Estuary
 
 
 ```
@@ -1612,4 +1600,41 @@ ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
 ```{r, fig.align="center",  echo=FALSE}
 knitr::include_graphics("figures/point_map.png")
 ```
+
+
+### Using Final Data
+```{r}
+# New Data from Ted 
+data_scores <- read_csv(here("data", "Aquaculture_Score_for_Figs.csv")) %>% 
+  clean_names()
+
+#spatial data from working group
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>% 
+  dplyr::select(Name, Latitude, Longitude) %>% 
+  rename(estuary = Name)
+
+# need to use polygon file to get all of the lat/long for new data set
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
+  rename(estuary = Estuary_Na)
+
+#st_centroid needs projection (using NAD83/California Albers) for st_centroid() to work
+SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
+  st_transform(crs = 3310)
+
+#creating centroid data
+SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons
+
+SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
+  st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
+
+estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons_centroid, by = "estuary") %>% 
+  dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, geometry)
+
+high_ecology_points <- estuary_sf %>%
+  filter(ecological_priority >= 0.5)
+
+
+
+```
+
 
