@@ -1624,33 +1624,52 @@ SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_N
   st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
 
 estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons_centroid, by = "estuary") %>% 
-  dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, geometry)
+  dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, centroid, geometry)
+
+estuary_sf$estuary_or_subbasin
 
 high_ecology_points <- estuary_sf %>%
   filter(ecological_priority >= 0.5)
+```
+
+```{r}
+#changing names in SNAPP_polygon file to match new dataset
+SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "North Juan de Fuca Basin: Gorge Waterway, Sooke/Victoria, Ayum Creek"] <- "North Juan de Fuca Basin"
+
+SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "SF Bay North Bay/San Pablo Bay (north of Richmond Bridge)"] <- "SF Bay North/San Pablo Bay"
+
+SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "SF Bay Central Bay South  (south of Alameda/South SF to Dumbarton Bridge)"] <- "SF Bay Central Bay South "
+
+SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "Northern Puget Sound:  Samish Bay, Bellingham Bay, Lummi Bay, Drayton Harbor, Fidalgo Bay, Padilla Bay"] <- "Northern Puget Sound"
+
+# SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == ""] <- ""
+
+SNAPP_estuary_polygons$estuary
 
 ```
 
+
 #### Final Data Bar Chart Map
 ```{r, barcharts on map with offsets}
-
 
 coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
   dplyr::mutate(estuary = SNAPP_estuary_polygons_centroid$estuary) %>%
   rename(lat = Y, long = X) %>%
   arrange(desc(lat))
 
-bar_data <- estuary_sf %>%
+coords$estuary
+
+bar_data <- data_scores %>%
   dplyr::filter(ecological_priority > 0.5) %>%
   left_join(coords, by = "estuary")
 
 st_geometry(bar_data) <- NULL
 
 coords_high_ecol <- bar_data %>% 
-  select(estuary_or_subbasin, lat, long)
+  select(estuary, lat, long)
 
 bar_data_long <- bar_data %>% 
-   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
+   pivot_longer(-c("estuary", "lat", "long"), names_to = "category", values_to = "score")
 
 # bar_data <-  data_scores %>%
 #   drop_na("long") %>% 
