@@ -38,6 +38,7 @@ library(scatterpie)
 
 
 *The new maps that have been created using the polygon data start on Line 416*
+*Code for creating shapefile is on line 449*
 
 
 ```{r echo=FALSE, message=FALSE}
