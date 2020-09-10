@@ -1635,7 +1635,7 @@ high_ecology_points <- estuary_sf %>%
 
 
 #### Final Data Bar Chart Map
-```{r, barcharts on map with offsets}
+```{r, final barcharts on map with offsets}
 
 coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
   dplyr::mutate(estuary = SNAPP_estuary_polygons_centroid$estuary) %>%
@@ -1809,7 +1809,7 @@ bar_chart_map
 
 #### Final Data Point Map
 
-```{r}
+```{r, final point map}
 
 centroid_points <-  SNAPP_estuary_polygons_centroid %>%
   select(estuary, centroid) %>%
@@ -1845,8 +1845,112 @@ ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
 #### Final Data Bar Chart Supplement
 
 ```{r}
+bar_data_40_long <-  centroid_points %>% 
+  st_drop_geometry() %>% 
+  select(map_number, short_names, ecological_priority, community_restoration, community_harvest, commercial_growers) %>% 
+  pivot_longer(-c(map_number, short_names), names_to = "category", values_to = "score")
 
+all_sites_wrap <- ggplot(bar_data_40_long, aes(x = category, y = score)) +
+  geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+  # ggtitle(graph_title) + #trying to add different title to each
+  ylim(0,1)+
+  # theme(plot.title = element_text(size = 6, face = "bold"))+
+  facet_wrap(~map_number, ncol = 10, nrow = 4)+
+  theme(axis.title.x = element_blank(), #removing all labels
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        # if (i != 1) {axis.title.y = element_blank()},
+        # axis.title.y =  ifelse(i == 1, element_blank(), element_text(size = rel(1.5), angle = 90)),
+        # axis.title.y = element_blank(),
+        # axis.text.y = element_blank(),
+        # axis.ticks.y = element_blank(),
+        #strip.text.x = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+        panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        plot.margin = unit(c(0, 0, 0, 0), "null"),
+        axis.line = element_line(),
+        strip.text = element_text(size = 7),#changing title font size for face_wrap()
+        axis.text.y = element_text(size = 6)) + #changing y-axis font size
+  coord_fixed(ratio = 5)
 
+zoom_data <- data_scores %>%
+  left_join(coords, by = "estuary")
+
+base_map_zoom_1_data <- zoom_data %>% 
+  dplyr::filter(long > -125.5 & long < -121) %>% 
+  dplyr::filter(lat > 40 & lat < 49.5 )
+
+base_map_zoom_2_data <- zoom_data %>% 
+dplyr::filter(long > -123.5 & long < -119.5) %>% 
+  dplyr::filter(lat > 35 & lat < 39 )
+
+base_map_zoom_3_data <- zoom_data %>% 
+  dplyr::filter(long < -112 & long > -120) %>% 
+  dplyr::filter(lat < 35 & lat > 24)
+
+base_map_zoom_1 <- ggplot(base_map_zoom_1_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  # geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-125.5, -121), ylim = c(40, 49.5))+
+  # geom_text(aes(long, lat, label = base_map_zoom_1_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_1_data, aes(long, lat), 
+                  label = base_map_zoom_1_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis
+
+base_map_zoom_2 <- ggplot(base_map_zoom_2_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  # geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-123.5, -119.5), ylim = c(35, 39))+
+  # geom_text(aes(long, lat, label = base_map_zoom_2_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_2_data, aes(long, lat), 
+                  label = base_map_zoom_2_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
+
+base_map_zoom_3 <- ggplot(base_map_zoom_3_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_sf(data = mexico) +
+  coord_sf(xlim = c(-120, -112), ylim = c(24, 35))+
+  geom_text_repel(data = base_map_zoom_3_data, aes(long, lat), 
+                  label = base_map_zoom_3_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
+
+base_map_zoom_3
+
+prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_3)+
+  plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
+
+prelim_barchart_supplement
 
 ```
 
