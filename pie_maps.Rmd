@@ -1602,7 +1602,9 @@ knitr::include_graphics("figures/point_map.png")
 ```{r}
 # New Data from Ted 
 data_scores <- read_csv(here("data", "Aquaculture_Score_for_Figs.csv")) %>% 
-  clean_names()
+  clean_names() %>% 
+  rename(short_names = estuary) %>% 
+  rename(estuary = polygon_names)
 
 #spatial data from working group
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>% 
@@ -1626,50 +1628,31 @@ SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_N
 estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons_centroid, by = "estuary") %>% 
   dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, centroid, geometry)
 
-estuary_sf$estuary_or_subbasin
-
 high_ecology_points <- estuary_sf %>%
   filter(ecological_priority >= 0.5)
-```
-
-```{r}
-#changing names in SNAPP_polygon file to match new dataset
-SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "North Juan de Fuca Basin: Gorge Waterway, Sooke/Victoria, Ayum Creek"] <- "North Juan de Fuca Basin"
-
-SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "SF Bay North Bay/San Pablo Bay (north of Richmond Bridge)"] <- "SF Bay North/San Pablo Bay"
-
-SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "SF Bay Central Bay South  (south of Alameda/South SF to Dumbarton Bridge)"] <- "SF Bay Central Bay South "
-
-SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == "Northern Puget Sound:  Samish Bay, Bellingham Bay, Lummi Bay, Drayton Harbor, Fidalgo Bay, Padilla Bay"] <- "Northern Puget Sound"
-
-# SNAPP_estuary_polygons$estuary[SNAPP_estuary_polygons$estuary == ""] <- ""
-
-SNAPP_estuary_polygons$estuary
 
 ```
 
 
 #### Final Data Bar Chart Map
-```{r, barcharts on map with offsets}
+```{r, final barcharts on map with offsets}
 
 coords <- as.data.frame(st_coordinates(SNAPP_estuary_polygons_centroid$centroid)) %>%
   dplyr::mutate(estuary = SNAPP_estuary_polygons_centroid$estuary) %>%
   rename(lat = Y, long = X) %>%
   arrange(desc(lat))
 
-coords$estuary
-
 bar_data <- data_scores %>%
-  dplyr::filter(ecological_priority > 0.5) %>%
+  dplyr::filter(ecological_priority >= 0.5) %>%
   left_join(coords, by = "estuary")
 
-st_geometry(bar_data) <- NULL
+# st_geometry(bar_data) <- NULL
 
 coords_high_ecol <- bar_data %>% 
   select(estuary, lat, long)
 
 bar_data_long <- bar_data %>% 
-   pivot_longer(-c("estuary", "lat", "long"), names_to = "category", values_to = "score")
+   pivot_longer(-c("map_number", "short_names","estuary", "lat", "long", "ecological_priority"), names_to = "category", values_to = "score")
 
 # bar_data <-  data_scores %>%
 #   drop_na("long") %>% 
@@ -1677,9 +1660,9 @@ bar_data_long <- bar_data %>%
 #   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
 #   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
 
-point_data <-  data_scores %>%
-  drop_na("long") %>%
-  select(estuary_or_subbasin, lat, long)
+# point_data <-  data_scores %>%
+#   drop_na("long") %>%
+#   select(estuary_or_subbasin, lat, long)
 
 #' Given a Set of Points and Box sizes, find locations
 #' Written by @zachp, updated by @slowkow
@@ -1729,10 +1712,10 @@ findboxes <- function(
 # data frame with two x and two y values
 df1 <- findboxes(coords_high_ecol,
   xcol = "long", ycol = "lat",
-  box_padding_x = Reduce("-", rev(range(point_data$lat))) * .5,
-  box_padding_y = Reduce("-", rev(range(point_data$long))) * .55,
-  point_padding_x = Reduce("-", rev(range(point_data$long))) * .5,
-  point_padding_y = Reduce("-", rev(range(point_data$lat))) * .55,
+  box_padding_x = Reduce("-", rev(range(coords$lat))) * .5,
+  box_padding_y = Reduce("-", rev(range(coords$long))) * .55,
+  point_padding_x = Reduce("-", rev(range(coords$long))) * .5,
+  point_padding_y = Reduce("-", rev(range(coords$lat))) * .55,
   force = 1e-3, #force = repulsion
   xlim = c(-120, -112),
   ylim = c(27, 55)
@@ -1749,13 +1732,13 @@ bar_data_offset <- coords_high_ecol %>%
 
 # taking offset lat long and creating a geometry
 offset_points <- st_as_sf(bar_data_offset, crs = 4326, coords = c("long_offset", "lat_offset")) %>%
-  select(estuary_or_subbasin, geometry)
+  select(estuary, geometry)
 
 # make a separate ggplot for each estuary:
 test_plots <- bar_data_long %>% 
-  group_by(estuary_or_subbasin) %>% 
+  group_by(estuary) %>% 
   nest() %>%
-  mutate(plot = map2(data, estuary_or_subbasin,
+  mutate(plot = map2(data, estuary,
                      ~ggplot(data = .x) +
                        aes(x = category, y = score) +
                        geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
@@ -1778,7 +1761,7 @@ test_plots <- bar_data_long %>%
 estuary_annotation <- offset_points %>% 
   bind_cols(as_tibble(st_coordinates(.))) %>% #retrieves coordinates in matrix form as a tibble, and binds into one dataframe
   st_drop_geometry() %>% #removes geometry from sf object
-  left_join(test_plots, by = "estuary_or_subbasin") %>% 
+  left_join(test_plots, by = "estuary") %>% 
   mutate(annotation = pmap(list( X, Y, plot), #creating an annotation column, then using the coordinates and plots in the annotation_custom() function
                            ~annotation_custom(ggplotGrob(..3), # ..3 refers to the third argument, so plot 
                                               xmin = ..1 - 0, xmax = ..1 + 3, # ..1 refers to X
@@ -1826,13 +1809,149 @@ bar_chart_map
 
 #### Final Data Point Map
 
-```{r}
+```{r, final point map}
+
+centroid_points <-  SNAPP_estuary_polygons_centroid %>%
+  select(estuary, centroid) %>%
+  right_join(data_scores, by = "estuary") %>% 
+  mutate(high_ecol = ifelse(ecological_priority >= 0.5, "yes", "no"))
+           
+point_map <- ggplot() +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = centroid_points$centroid, aes(color = centroid_points$ecological_priority, size = 2, shape = centroid_points$high_ecol)) +
+  scale_color_gradientn(colours = c(
+    "#eff3ff",
+    "#6baed6",
+    "#084594"
+  )) +
+  scale_shape_manual(values=c(20, 18))+
+  scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
+  labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
+  coord_sf(xlim = c(-130, -115), ylim = c(30, 53)) +
+  scale_x_continuous(breaks = c(-130, -116)) +
+  scale_y_continuous(breaks = c(30, 40, 50)) +
+  guides(size = FALSE)+ #removing size from legend
+  theme_void()
+
+point_map
+
+ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
+
 
 ```
 
 #### Final Data Bar Chart Supplement
 
 ```{r}
+bar_data_40_long <-  centroid_points %>% 
+  st_drop_geometry() %>% 
+  select(map_number, short_names, ecological_priority, community_restoration, community_harvest, commercial_growers) %>% 
+  pivot_longer(-c(map_number, short_names), names_to = "category", values_to = "score")
+
+all_sites_wrap <- ggplot(bar_data_40_long, aes(x = category, y = score)) +
+  geom_bar(stat = "identity", show.legend = FALSE, aes(fill = category)) +
+  # ggtitle(graph_title) + #trying to add different title to each
+  ylim(0,1)+
+  # theme(plot.title = element_text(size = 6, face = "bold"))+
+  facet_wrap(~map_number, ncol = 10, nrow = 4)+
+  theme(axis.title.x = element_blank(), #removing all labels
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        # if (i != 1) {axis.title.y = element_blank()},
+        # axis.title.y =  ifelse(i == 1, element_blank(), element_text(size = rel(1.5), angle = 90)),
+        # axis.title.y = element_blank(),
+        # axis.text.y = element_blank(),
+        # axis.ticks.y = element_blank(),
+        #strip.text.x = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #removing grids
+        panel.background = element_rect(fill = "transparent",colour = NA), #making background transparent
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        plot.margin = unit(c(0, 0, 0, 0), "null"),
+        axis.line = element_line(),
+        strip.text = element_text(size = 7),#changing title font size for face_wrap()
+        axis.text.y = element_text(size = 6)) + #changing y-axis font size
+  coord_fixed(ratio = 5)
+
+zoom_data <- data_scores %>%
+  left_join(coords, by = "estuary")
+
+base_map_zoom_1_data <- zoom_data %>% 
+  dplyr::filter(long > -125.5 & long < -121) %>% 
+  dplyr::filter(lat > 40 & lat < 49.5 )
+
+base_map_zoom_2_data <- zoom_data %>% 
+dplyr::filter(long > -123.5 & long < -119.5) %>% 
+  dplyr::filter(lat > 35 & lat < 39 )
+
+base_map_zoom_3_data <- zoom_data %>% 
+  dplyr::filter(long < -112 & long > -120) %>% 
+  dplyr::filter(lat < 35 & lat > 24)
+
+base_map_zoom_1 <- ggplot(base_map_zoom_1_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  # geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-125.5, -121), ylim = c(40, 49.5))+
+  # geom_text(aes(long, lat, label = base_map_zoom_1_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_1_data, aes(long, lat), 
+                  label = base_map_zoom_1_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis
+
+base_map_zoom_2 <- ggplot(base_map_zoom_2_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  # geom_point(aes(long, lat), color = "black")+
+  coord_sf(xlim = c(-123.5, -119.5), ylim = c(35, 39))+
+  # geom_text(aes(long, lat, label = base_map_zoom_2_data$ID, color = "blue"))+
+  geom_text_repel(data = base_map_zoom_2_data, aes(long, lat), 
+                  label = base_map_zoom_2_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
+
+base_map_zoom_3 <- ggplot(base_map_zoom_3_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_sf(data = mexico) +
+  coord_sf(xlim = c(-120, -112), ylim = c(24, 35))+
+  geom_text_repel(data = base_map_zoom_3_data, aes(long, lat), 
+                  label = base_map_zoom_3_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
+
+base_map_zoom_1
+base_map_zoom_2
+base_map_zoom_3
+
+prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_3)
+
+prelim_barchart_supplement
 
 ```
 
