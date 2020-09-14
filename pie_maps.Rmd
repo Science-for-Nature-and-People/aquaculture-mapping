@@ -1625,9 +1625,11 @@ SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons
 SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
   st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
 
+#joining new data from Ted with the estuary centroids
 estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons_centroid, by = "estuary") %>% 
   dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, centroid, geometry)
 
+#filtering new data for sites of ecological priority
 high_ecology_points <- estuary_sf %>%
   filter(ecological_priority >= 0.5)
 
@@ -1646,23 +1648,12 @@ bar_data <- data_scores %>%
   dplyr::filter(ecological_priority >= 0.5) %>%
   left_join(coords, by = "estuary")
 
-# st_geometry(bar_data) <- NULL
-
 coords_high_ecol <- bar_data %>% 
   select(estuary, lat, long)
 
 bar_data_long <- bar_data %>% 
    pivot_longer(-c("map_number", "short_names","estuary", "lat", "long", "ecological_priority"), names_to = "category", values_to = "score")
 
-# bar_data <-  data_scores %>%
-#   drop_na("long") %>% 
-#   #select(-coastwide_coservation) %>%  
-#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-#   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
-
-# point_data <-  data_scores %>%
-#   drop_na("long") %>%
-#   select(estuary_or_subbasin, lat, long)
 
 #' Given a Set of Points and Box sizes, find locations
 #' Written by @zachp, updated by @slowkow
@@ -1712,13 +1703,13 @@ findboxes <- function(
 # data frame with two x and two y values
 df1 <- findboxes(coords_high_ecol,
   xcol = "long", ycol = "lat",
-  box_padding_x = Reduce("-", rev(range(coords$lat))) * .5,
-  box_padding_y = Reduce("-", rev(range(coords$long))) * .55,
-  point_padding_x = Reduce("-", rev(range(coords$long))) * .5,
-  point_padding_y = Reduce("-", rev(range(coords$lat))) * .55,
-  force = 1e-3, #force = repulsion
+  box_padding_x = Reduce("-", rev(range(coords$lat))) * .30,
+  box_padding_y = Reduce("-", rev(range(coords$long))) * .125,
+  point_padding_x = Reduce("-", rev(range(coords$long))) * .30,
+  point_padding_y = Reduce("-", rev(range(coords$lat))) * .125,
+  force = 1e-4, #force = repulsion
   xlim = c(-120, -112),
-  ylim = c(27, 55)
+  ylim = c(24, 55)
 )
 
 #renaming first column to match original bar_data df
@@ -1776,7 +1767,7 @@ simple_barchart <-ggplot(bar_data_long, aes(score, fill = category))+
     legend.title = element_text(size = 7),
     legend.text = element_text(size = 7),
     legend.background = element_rect(fill = NA))+
-  scale_fill_discrete(name = "Score", labels = c("Commercial Production", "Ecological", "Community Engagement Harvest", "Community Engagement Restoration"))
+  scale_fill_discrete(name = "Score", labels = c("Commercial Production", "Community Engagement Harvest", "Community Engagement Restoration"))
 
 legend <- get_legend(simple_barchart)
 gg_legend <-as_ggplot(legend)
@@ -1785,8 +1776,9 @@ gg_legend <-as_ggplot(legend)
 bar_charts_offset <- ggplot(offset_points) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
+  geom_sf(data = mexico) + 
   xlim(c(-130, -113))+
-  ylim(c(27, 55))+
+  ylim(c(24, 55))+
   geom_segment(data = bar_data_offset, aes(x = long, y = lat, xend = long_offset, yend = lat_offset)) +
   geom_point(data = bar_data_offset, aes(long, lat), color = "black") +
   geom_point(data = bar_data_offset, aes(long_offset, lat_offset), color = "black") +
@@ -1801,11 +1793,15 @@ layout <- c(
   area(t = 8, l = 1, b = 8, r = 6)
 )
 
-bar_chart_map <- bar_charts_offset + gg_legend + 
+final_bar_chart_map <- bar_charts_offset + gg_legend + 
   plot_layout(design = layout)
 
-bar_chart_map
 ```
+
+```{r}
+ggsave("figures/final_bar_chart_map.png", final_bar_chart_map, width = 12, height = 6, dpi = 300)
+```
+
 
 #### Final Data Point Map
 
@@ -1829,11 +1825,10 @@ Zoom_point_1 <- ggplot() +
   scale_shape_manual(values=c(20, 18))+
   scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
   labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
-  coord_sf(xlim = c(-125.5, -121), ylim = c(45, 49.5)) +
+  coord_sf(xlim = c(-125.5, -121), ylim = c(46, 49.5)) +
   guides(size = FALSE)+ #removing size from legend
-  theme_void()
-
-Zoom_point_1
+  theme_void()+
+  theme(legend.position = "none")
 
 Zoom_point_2 <- ggplot() +
  geom_sf(data = us_boundaries()) +
@@ -1848,11 +1843,10 @@ Zoom_point_2 <- ggplot() +
   scale_shape_manual(values=c(20, 18))+
   scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
   labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
-  coord_sf(xlim = c(-123.5, -119), ylim = c(34.85, 38.5)) +
+  coord_sf(xlim = c(-125.5, -121), ylim = c(39, 46)) +
   guides(size = FALSE)+ #removing size from legend
-  theme_void()
-
-
+  theme_void()+
+  theme(legend.position = "none")
 
 Zoom_point_3 <- ggplot() +
  geom_sf(data = us_boundaries()) +
@@ -1867,13 +1861,28 @@ Zoom_point_3 <- ggplot() +
   scale_shape_manual(values=c(20, 18))+
   scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
   labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
-  coord_sf(xlim = c(-120, -112), ylim = c(24, 34.5)) +
+  coord_sf(xlim = c(-123.5, -119), ylim = c(34.85, 39)) +
   guides(size = FALSE)+ #removing size from legend
-  theme_void()
+  theme_void()+
+  theme(legend.position = "none")
 
-Zoom_point_1
-Zoom_point_2 
-Zoom_point_3
+Zoom_point_4 <- ggplot() +
+ geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) +
+  geom_sf(data = mexico) +
+  geom_sf(data = centroid_points$centroid, aes(color = centroid_points$ecological_priority, size = 2, shape = centroid_points$high_ecol)) +
+  scale_color_gradientn(colours = c(
+    "#eff3ff",
+    "#6baed6",
+    "#084594"
+  )) +
+  scale_shape_manual(values=c(20, 18))+
+  scale_shape_discrete(name = "Ecological Score", labels = c("> 0.5", "< 0.5"))+
+  labs(color = "Ecological Score", shape = "Ecology Score") + #changing names on legend
+  coord_sf(xlim = c(-120, -112), ylim = c(24, 34.85)) +
+  guides(size = FALSE)+ #removing size from legend
+  theme_void()+
+  theme(legend.position = "none")
 
 point_map <- ggplot() +
   geom_sf(data = us_boundaries()) +
@@ -1894,11 +1903,17 @@ point_map <- ggplot() +
   guides(size = FALSE)+ #removing size from legend
   theme_void()
 
-point_map
+legend_3 <- get_legend(point_map)
+legend_3
 
+point_composite_map <- (Zoom_point_1) + (Zoom_point_2) + (Zoom_point_3) + (Zoom_point_4) + (legend_3) +
+  plot_layout(nrow = 1, ncol = 5)
+
+```
+
+```{r}
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
-
-
+ggsave("figures/point_map_composite.png", point_composite_map, width = 12, height = 6, dpi = 300)
 ```
 
 #### Final Data Bar Chart Supplement
@@ -2053,10 +2068,10 @@ barchart_supplement_v1 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_
 
 barchart_supplement_v1
 
-barchart_supplement_v2 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_4 / base_map_zoom_5)+
+barchart_supplement_v2 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_4) + (base_map_zoom_5)+
   plot_layout(nrow = 1, ncol = 5, widths = c(4, 1, 1, 1, 1))
 
-barchart_supplement_v2
+barchart_supplement_v2 
 
 base_map_zoom_1
 base_map_zoom_2
@@ -2065,7 +2080,6 @@ base_map_zoom_3
 prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_3)
 
 prelim_barchart_supplement
-
 ```
 
 ```{r}
