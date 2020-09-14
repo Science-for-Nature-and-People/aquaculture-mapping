@@ -1646,23 +1646,12 @@ bar_data <- data_scores %>%
   dplyr::filter(ecological_priority >= 0.5) %>%
   left_join(coords, by = "estuary")
 
-# st_geometry(bar_data) <- NULL
-
 coords_high_ecol <- bar_data %>% 
   select(estuary, lat, long)
 
 bar_data_long <- bar_data %>% 
    pivot_longer(-c("map_number", "short_names","estuary", "lat", "long", "ecological_priority"), names_to = "category", values_to = "score")
 
-# bar_data <-  data_scores %>%
-#   drop_na("long") %>% 
-#   #select(-coastwide_coservation) %>%  
-#   select(estuary_or_subbasin, lat, long, ecological, harvest, community_engagement_restotation) %>% 
-#   pivot_longer(-c("estuary_or_subbasin", "lat", "long"), names_to = "category", values_to = "score")
-
-# point_data <-  data_scores %>%
-#   drop_na("long") %>%
-#   select(estuary_or_subbasin, lat, long)
 
 #' Given a Set of Points and Box sizes, find locations
 #' Written by @zachp, updated by @slowkow
@@ -1712,11 +1701,11 @@ findboxes <- function(
 # data frame with two x and two y values
 df1 <- findboxes(coords_high_ecol,
   xcol = "long", ycol = "lat",
-  box_padding_x = Reduce("-", rev(range(coords$lat))) * .5,
+  box_padding_x = Reduce("-", rev(range(coords$lat))) * .30,
   box_padding_y = Reduce("-", rev(range(coords$long))) * .55,
-  point_padding_x = Reduce("-", rev(range(coords$long))) * .5,
+  point_padding_x = Reduce("-", rev(range(coords$long))) * .30,
   point_padding_y = Reduce("-", rev(range(coords$lat))) * .55,
-  force = 1e-3, #force = repulsion
+  force = 1e-4, #force = repulsion
   xlim = c(-120, -112),
   ylim = c(27, 55)
 )
@@ -1776,7 +1765,7 @@ simple_barchart <-ggplot(bar_data_long, aes(score, fill = category))+
     legend.title = element_text(size = 7),
     legend.text = element_text(size = 7),
     legend.background = element_rect(fill = NA))+
-  scale_fill_discrete(name = "Score", labels = c("Commercial Production", "Ecological", "Community Engagement Harvest", "Community Engagement Restoration"))
+  scale_fill_discrete(name = "Score", labels = c("Commercial Production", "Community Engagement Harvest", "Community Engagement Restoration"))
 
 legend <- get_legend(simple_barchart)
 gg_legend <-as_ggplot(legend)
@@ -1897,6 +1886,10 @@ point_map <- ggplot() +
 point_map
 
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
+
+point_composite_map <- Zoom_point_1 + Zoom_point_2 + Zoom_point_3
+
+point_composite_map
 
 
 ```
