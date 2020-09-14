@@ -1889,6 +1889,14 @@ base_map_zoom_3_data <- zoom_data %>%
   dplyr::filter(long < -112 & long > -120) %>% 
   dplyr::filter(lat < 35 & lat > 24)
 
+base_map_zoom_4_data <- zoom_data %>% 
+  dplyr::filter(long < -112 & long > -120) %>% 
+  dplyr::filter(lat < 35 & lat > 31)
+
+base_map_zoom_5_data <- zoom_data %>% 
+  dplyr::filter(long < -112 & long > -120) %>% 
+  dplyr::filter(lat < 31 & lat > 24)
+
 base_map_zoom_1 <- ggplot(base_map_zoom_1_data) +
   geom_sf(data = us_boundaries()) +
   geom_sf(data = canada) + 
@@ -1945,13 +1953,56 @@ base_map_zoom_3 <- ggplot(base_map_zoom_3_data) +
   theme(legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
 
-base_map_zoom_3
+base_map_zoom_4 <- ggplot(base_map_zoom_4_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_sf(data = mexico) +
+  coord_sf(xlim = c(-120, -112), ylim = c(31, 35))+
+  geom_text_repel(data = base_map_zoom_4_data, aes(long, lat), 
+                  label = base_map_zoom_4_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
 
-prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_3)+
+base_map_zoom_5 <- ggplot(base_map_zoom_5_data) +
+  geom_sf(data = us_boundaries()) +
+  geom_sf(data = canada) + 
+  geom_sf(data = mexico) +
+  coord_sf(xlim = c(-120, -112), ylim = c(24, 31))+
+  geom_text_repel(data = base_map_zoom_5_data, aes(long, lat), 
+                  label = base_map_zoom_5_data$map_number, 
+                  color = "red",
+                  #nudge_x = -126, 
+                  size = 3,
+                  min.segment.length = 0,
+                  point.padding = NA,
+                  box.padding = 0,
+                  segment.color = "black"
+                 )+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)) #changing angle of x-axis)
+
+barchart_supplement_v1 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_3)+
   plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
 
-prelim_barchart_supplement
+barchart_supplement_v1
+
+barchart_supplement_v2 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_4 / base_map_zoom_5)+
+  plot_layout(nrow = 1, ncol = 5, widths = c(4, 1, 1, 1, 1))
+
+barchart_supplement_v2
 
 ```
 
+```{r}
+ggsave("figures/barchart_supplement_v1.png", barchart_supplement_v1, width = 12, height = 6, dpi = 300)
+ggsave("figures/barchart_supplement_v2.png", barchart_supplement_v2, width = 12, height = 6, dpi = 300)
+```
 
