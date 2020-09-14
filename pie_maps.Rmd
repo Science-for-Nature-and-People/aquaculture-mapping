@@ -1999,6 +1999,14 @@ barchart_supplement_v2 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_
 
 barchart_supplement_v2
 
+base_map_zoom_1
+base_map_zoom_2
+base_map_zoom_3
+
+prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_3)
+
+prelim_barchart_supplement
+
 ```
 
 ```{r}
