@@ -24,14 +24,11 @@ library(leafpop)
 
 
 #This reads in the data and formats to be used by the shiny app
-SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_centroids") %>%
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_centroids_final") %>%
  
-  mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1 
-         #"Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1
+  mutate("Ecological Priority" = ecological_priority, "Community Restoration" = community_restoration, "Community Harvest" = community_harvest, "Commercial Growers" = commercial_growers, "Ecological Priority2" = ecological_priority, "Community Restoration2" = community_restoration, "Community Harvest2" = community_harvest, "Commercial Growers2" = commercial_growers
          ) %>%
-  select(-NCEAM) %>%
-  gather(score_type, score, -Estuary_Na, -geometry, -Ecology, -Restoration, -Harvest, -Community, -Ecology2, -Restoration2, -Harvest2, -Community2
-         #-Ecology3, -Restoration3, -Harvest3, -Community3
+  gather(score_type, score, -estuary, -geometry, -"Ecological Priority", -"Community Restoration", -"Community Harvest2", -"Commercial Growers", -"Ecological Priority2", -"Community Restoration2", -"Community Harvest2", -"Commercial Growers2"
          ) 
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
@@ -56,7 +53,7 @@ ui <- fluidPage(
                  #This dropdown controls the category that is being used to color the estuaries
                   selectInput(inputId = "aqua_score_color",
                             label = "Cateory for Color Ramp",
-                            choices = c(Ecology = "Ecology2", Restoration = "Restoration2", Harvest = "Harvest2", "Community" = "Community2")
+                            choices = c("Ecological Priority"="Ecological Priority2", "Community Restoration"="Community Restoration2", "Community Harvest"="Community Harvest2", "Commercial Growers"="Commercial Growers2")
                  ),
                  
                  #This dropdown controls the category that is being used to determine the size the estuary dots
@@ -70,13 +67,13 @@ ui <- fluidPage(
                  #This dropdown controls the category that will be filtered with the slide tool
                  selectInput(inputId = "slider_select",
                              label = "Select Cateory for Slider",
-                             choices = c(Ecology = "Ecol1", Restoration = "Restor1", Harvest = "Harvest1", "Community" = "Comm1")
+                             choices = c("Ecological Priority","Community Restoration", "Community Harvest", "Commercial Growers")
                  ),
                  
                  #This is a slide tool that filters the scores of the estuaries
                  sliderInput(inputId = "slider_score_range",
                              label = "Score Range",
-                             min = 0, max = 1, value = c(-1,1), step = 0.1, ticks = TRUE
+                             min = 0, max = 1, value = c(0,1), step = 0.1, ticks = TRUE
                  )
                  
     ),
@@ -94,7 +91,7 @@ server <- function(inputs, outputs) {
   estuary_shiny <- reactive({
     SNAPP_estuary_points %>%
       filter(score_type %in% (inputs$slider_select)) %>%
-      select(inputs$aqua_score_color, inputs$aqua_score_size, Estuary_Na,  score, score_type, Ecology, Restoration, Harvest, Community) %>%
+      select(inputs$aqua_score_color, inputs$aqua_score_size, estuary,  score, score_type, "Ecological Priority","Community Restoration", "Community Harvest", "Commercial Growers") %>%
       filter(score >= inputs$slider_score_range[1] & score <= inputs$slider_score_range[2]) 
   })
   
@@ -113,21 +110,21 @@ server <- function(inputs, outputs) {
         breaks = c(0, 0.25, 0.5, 0.75, 1),
         labels = c("0 - 0.25", "0.25 - 0.5", "0.5 - 0.75", "0.75 - 1"), 
         palette = case_when( #tmaptools::palette_explorer() to find other palettes
-          inputs$aqua_score_color == "Ecology2" ~ "Greens",
-          inputs$aqua_score_color == "Restoration2" ~ "Blues",
-          inputs$aqua_score_color == "Harvest2" ~ "Oranges",
+          inputs$aqua_score_color == "Ecological Priority2" ~ "Greens",
+          inputs$aqua_score_color == "Community Restoration2" ~ "Blues",
+          inputs$aqua_score_color == "Community Harvest2" ~ "Oranges",
           inputs$aqua_score_color == "Community2" ~ "Purples"
           ), 
         n = 4,
         contrast = c(0.1, 0.8),
         title = case_when(
-          inputs$aqua_score_color == "Ecology2" ~ "Ecology Score",
-          inputs$aqua_score_color == "Restoration2" ~ "Restoration Score",
-          inputs$aqua_score_color == "Harvest2" ~ "Harvest Score",
-          inputs$aqua_score_color == "Community2" ~ "Community Score"
+          inputs$aqua_score_color == "Ecological Priority2" ~ "Ecology Score",
+          inputs$aqua_score_color == "Community Restoration2" ~ "Restoration Score",
+          inputs$aqua_score_color == "Community Harvest2" ~ "Harvest Score",
+          inputs$aqua_score_color == "Commercial Growers2" ~ "Community Score"
         ),
         id = "Estuary_Na",
-        popup.vars = c("Ecology", "Restoration", "Harvest", "Community"),
+        popup.vars = c("Ecological Priority", "Community Restoration", "Community Harvest", "Commercial Growers2"),
         clustering = FALSE #This if for clustering the points when zoomed out
         #legend.size.show = TRUE
         ) +
