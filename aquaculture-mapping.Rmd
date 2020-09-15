@@ -36,7 +36,7 @@ library(patchwork)
 library(scatterpie)
 ```
 
-
+Data to be used in shiny app
 ```{r}
 # New Data from Ted 
 data_scores <- read_csv(here("data", "Aquaculture_Score_for_Figs.csv")) %>% 
