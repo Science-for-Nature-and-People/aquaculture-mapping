@@ -1119,6 +1119,7 @@ plot_patch <- wrap_plots(plot_list, ncol = 2, width = 1)
 
 plot_patch | base_map
 
+
 ```
 
 #### Trying it with all 66 centroids:
@@ -1802,7 +1803,6 @@ final_bar_chart_map <- bar_charts_offset + gg_legend +
 ggsave("figures/final_bar_chart_map.png", final_bar_chart_map, width = 12, height = 6, dpi = 300)
 ```
 
-
 #### Final Data Point Map
 
 ```{r, final point map}
@@ -1909,7 +1909,9 @@ legend_3
 point_composite_map <- (Zoom_point_1) + (Zoom_point_2) + (Zoom_point_3) + (Zoom_point_4) + (legend_3) +
   plot_layout(nrow = 1, ncol = 5)
 
+
 ```
+
 
 ```{r}
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
@@ -2066,20 +2068,11 @@ base_map_zoom_5 <- ggplot(base_map_zoom_5_data) +
 barchart_supplement_v1 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2) + (base_map_zoom_3)+
   plot_layout(nrow = 1, ncol = 4, widths = c(4, 1, 1, 1))
 
-barchart_supplement_v1
-
 barchart_supplement_v2 <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_4) + (base_map_zoom_5)+
   plot_layout(nrow = 1, ncol = 5, widths = c(4, 1, 1, 1, 1))
 
-barchart_supplement_v2 
-
-base_map_zoom_1
-base_map_zoom_2
-base_map_zoom_3
-
 prelim_barchart_supplement <- (all_sites_wrap) + (base_map_zoom_1) + (base_map_zoom_2 / base_map_zoom_3)
 
-prelim_barchart_supplement
 ```
 
 ```{r}
