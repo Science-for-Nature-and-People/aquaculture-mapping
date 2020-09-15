@@ -139,7 +139,7 @@ server <- function(inputs, outputs) {
       basemap_imagery +
       basemap_physical +
       basemap_gray 
-    tmap_leaflet(SNAPP_estuary_map_points)
+    tmap_leaflet(SNAPP_estuary_map_points, in.shiny = TRUE)
 
     
   })
