@@ -77,9 +77,12 @@ ui <- fluidPage(
                  )
                  
     ),
-    mainPanel("Estuaries for Conservation Aquaculture",
+    mainPanel(
+      h4("Estuaries for Conservation Aquaculture"),
+      h5("Click points for more information"),
               leafletOutput(outputId = "Score_Map", 
-                            width = 550, height = 800
+                            #width = 550, 
+                            height = 780
               ))
   )
 )
