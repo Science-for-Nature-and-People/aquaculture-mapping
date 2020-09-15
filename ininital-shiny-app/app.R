@@ -52,7 +52,7 @@ ui <- fluidPage(
     sidebarPanel(
                  #This dropdown controls the category that is being used to color the estuaries
                   selectInput(inputId = "aqua_score_color",
-                            label = "Cateory for Color Ramp",
+                            label = "Select Cateory for Color Ramp",
                             choices = c("Ecological Priority"="Ecological Priority2", "Community Restoration"="Community Restoration2", "Community Harvest"="Community Harvest2", "Commercial Growers"="Commercial Growers2")
                  ),
                  
@@ -72,7 +72,7 @@ ui <- fluidPage(
                  
                  #This is a slide tool that filters the scores of the estuaries
                  sliderInput(inputId = "slider_score_range",
-                             label = "Score Range",
+                             label = "Filter Score Range",
                              min = 0, max = 1, value = c(0,1), step = 0.1, ticks = TRUE
                  )
                  
@@ -118,10 +118,10 @@ server <- function(inputs, outputs) {
         n = 4,
         contrast = c(0.1, 0.8),
         title = case_when(
-          inputs$aqua_score_color == "Ecological Priority2" ~ "Ecology Score",
-          inputs$aqua_score_color == "Community Restoration2" ~ "Restoration Score",
-          inputs$aqua_score_color == "Community Harvest2" ~ "Harvest Score",
-          inputs$aqua_score_color == "Commercial Growers2" ~ "Community Score"
+          inputs$aqua_score_color == "Ecological Priority2" ~ "Ecological Priority Score",
+          inputs$aqua_score_color == "Community Restoration2" ~ "Community Restoration Score",
+          inputs$aqua_score_color == "Community Harvest2" ~ "Community Harvest Score",
+          inputs$aqua_score_color == "Commercial Growers2" ~ "Commercial Growers Score"
         ),
         id = "estuary",
         popup.vars = c("Ecological Priority", "Community Restoration", "Community Harvest", "Commercial Growers"),
