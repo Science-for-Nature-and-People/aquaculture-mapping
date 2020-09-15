@@ -67,7 +67,7 @@ ui <- fluidPage(
                  #This dropdown controls the category that will be filtered with the slide tool
                  selectInput(inputId = "slider_select",
                              label = "Select Cateory for Slider",
-                             choices = c("Ecological Priority","Community Restoration", "Community Harvest", "Commercial Growers")
+                             choices = c("Ecological Priority" = "eclgcl_","Community Restoration" = "cmmnty_r", "Community Harvest" = "cmmnty_h", "Commercial Growers" = "cmmrcl_")
                  ),
                  
                  #This is a slide tool that filters the scores of the estuaries
