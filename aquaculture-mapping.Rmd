@@ -37,9 +37,46 @@ library(scatterpie)
 ```
 
 
-*The new maps that have been created using the polygon data start on Line 416*
-*Code for creating shapefile is on line 449*
+```{r}
+# New Data from Ted 
+data_scores <- read_csv(here("data", "Aquaculture_Score_for_Figs.csv")) %>% 
+  clean_names() %>% 
+  rename(short_names = estuary) %>% 
+  rename(estuary = polygon_names)
 
+#spatial data from working group
+SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POINTS-44") %>% 
+  dplyr::select(Name, Latitude, Longitude) %>% 
+  rename(estuary = Name)
+
+# need to use polygon file to get all of the lat/long for new data set
+SNAPP_estuary_polygons <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP_ESTUARIES_POLYGONS-66") %>%
+  rename(estuary = Estuary_Na)
+
+#st_centroid needs projection (using NAD83/California Albers) for st_centroid() to work
+SNAPP_estuary_polygons_NAD83 <- SNAPP_estuary_polygons %>%
+  st_transform(crs = 3310)
+
+#creating centroid data
+SNAPP_estuary_polygons_centroid <- SNAPP_estuary_polygons
+
+SNAPP_estuary_polygons_centroid$centroid <- st_centroid(SNAPP_estuary_polygons_NAD83$geometry) %>%
+  st_transform(crs = 4326) #converting to WSG84 to get back in lat/long
+
+estuary_sf <- left_join(data_scores, SNAPP_estuary_polygons_centroid, by = "estuary") %>% 
+  dplyr::select(map_number, estuary, ecological_priority, community_restoration, community_harvest, commercial_growers, centroid, geometry)
+
+
+sf::st_write(estuary_sf, "locations/SNAPP_estuary_centroids_final.shp")
+
+
+```
+
+
+############################################################################################################################
+
+*Below is Data Exploration and initial maps* 
+*See pie_maps.Rmd for maps used in final analysis*
 
 ```{r echo=FALSE, message=FALSE}
 #Reading in data
@@ -127,8 +164,6 @@ estuary_reactive_lat_lon <- data_scores %>%
   gather(score_type, score, -estuary_or_subbasin, - long, -lat)
 
 ```
-
-
 
 ```{r, message=FALSE}
 #Making an interactive map with tmap
@@ -453,6 +488,9 @@ SNAPP_estuary_centroids <- read_sf(dsn = here("locations"), layer = "FINAL_SNAPP
 sf::st_write(SNAPP_estuary_centroids, "locations/SNAPP_estuary_centroids.shp")
 
 ```
+
+
+
 
 ```{r}
 # Making individual map of the ecology estuary scores
