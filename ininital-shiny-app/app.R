@@ -26,9 +26,9 @@ library(leafpop)
 #This reads in the data and formats to be used by the shiny app
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_centroids_final") %>%
  
-  mutate("Ecological Priority" = ecological_priority, "Community Restoration" = community_restoration, "Community Harvest" = community_harvest, "Commercial Growers" = commercial_growers, "Ecological Priority2" = ecological_priority, "Community Restoration2" = community_restoration, "Community Harvest2" = community_harvest, "Commercial Growers2" = commercial_growers
+  mutate("Ecological Priority" = eclgcl_, "Community Restoration" = cmmnty_r, "Community Harvest" = cmmnty_h, "Commercial Growers" = cmmrcl_, "Ecological Priority2" = eclgcl_, "Community Restoration2" = cmmnty_r, "Community Harvest2" = cmmnty_h, "Commercial Growers2" = cmmrcl_
          ) %>%
-  gather(score_type, score, -estuary, -geometry, -"Ecological Priority", -"Community Restoration", -"Community Harvest2", -"Commercial Growers", -"Ecological Priority2", -"Community Restoration2", -"Community Harvest2", -"Commercial Growers2"
+  gather(score_type, score, -estuary, -geometry, -"Ecological Priority", -"Community Restoration", -"Community Harvest", -"Commercial Growers", -"Ecological Priority2", -"Community Restoration2", -"Community Harvest2", -"Commercial Growers2"
          ) 
 
 basemap_streets <- tm_basemap("Esri.WorldStreetMap")
@@ -124,7 +124,7 @@ server <- function(inputs, outputs) {
           inputs$aqua_score_color == "Commercial Growers2" ~ "Community Score"
         ),
         id = "estuary",
-        popup.vars = c("Ecological Priority", "Community Restoration", "Community Harvest", "Commercial Growers2"),
+        popup.vars = c("Ecological Priority", "Community Restoration", "Community Harvest", "Commercial Growers"),
         clustering = FALSE #This if for clustering the points when zoomed out
         #legend.size.show = TRUE
         ) +
