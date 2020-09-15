@@ -123,7 +123,7 @@ server <- function(inputs, outputs) {
           inputs$aqua_score_color == "Community Harvest2" ~ "Harvest Score",
           inputs$aqua_score_color == "Commercial Growers2" ~ "Community Score"
         ),
-        id = "Estuary_Na",
+        id = "estuary",
         popup.vars = c("Ecological Priority", "Community Restoration", "Community Harvest", "Commercial Growers2"),
         clustering = FALSE #This if for clustering the points when zoomed out
         #legend.size.show = TRUE
