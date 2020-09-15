@@ -25,29 +25,7 @@ library(leafpop)
 
 #This reads in the data and formats to be used by the shiny app
 SNAPP_estuary_points <- read_sf(dsn = here("locations"), layer = "SNAPP_estuary_centroids") %>%
-#############################################################################################################################
-  
-#This section of the code is only going to be for the preliminary data, with the final data this will not be needed. #This is to make all of the scores thata re less than zero go to zero.
-
-    mutate(Ecol1 = case_when( 
-    Ecol1 < 0 ~ 0,
-    Ecol1 >= 0 ~ Ecol1
-  )) %>%
-  mutate(Restor1 = case_when(
-    Restor1 < 0 ~ 0,
-    Restor1 >= 0 ~ Restor1
-  )) %>%
-  mutate(Harvest1 = case_when(
-    Harvest1 < 0 ~ 0,
-    Harvest1 >= 0 ~ Harvest1
-  )) %>%
-  mutate(Comm1 = case_when(
-    Comm1 < 0 ~ 0,
-    Comm1 >= 0 ~ Comm1
-  )) %>%
-  
-  
-##########################################################################################################################################  
+ 
   mutate("Ecology" = Ecol1, "Restoration" = Restor1, "Harvest" = Harvest1, "Community" = Comm1, "Ecology2" = Ecol1, "Restoration2" = Restor1, "Harvest2" = Harvest1, "Community2" = Comm1 
          #"Ecology3" = Ecol1, "Restoration3" = Restor1, "Harvest3" = Harvest1, "Community3" = Comm1
          ) %>%
