@@ -1909,7 +1909,9 @@ legend_3
 point_composite_map <- (Zoom_point_1) + (Zoom_point_2) + (Zoom_point_3) + (Zoom_point_4) + (legend_3) +
   plot_layout(nrow = 1, ncol = 5)
 
+
 ```
+
 
 ```{r}
 ggsave("figures/point_map.png", point_map, width = 12, height = 6, dpi = 300)
