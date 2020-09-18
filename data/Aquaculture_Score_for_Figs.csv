@@ -1,0 +1,41 @@
+﻿Map_number,Estuary,polygon_names,Ecological_Priority,Community_Restoration,Community_Harvest,Commercial_Growers
+6,Admiralty Inlet,Admiralty Inlet,0.36,0.56,0.71,0.78
+30,Agua Hedionda Creek,Agua Hedionda,0,0,0,0
+27,Alamitos Bay,Alamitos Bay,0.09,0.22,0,0
+39,Bahia San Quintin,Bahia San Quintin,0.32,0,0.5,0.44
+31,Batiquitos Lagoon,Batiquitos Lagoon,0,0,0,0
+24,Carpinteria Marsh,El Estero - Carpinteria Marsh,0.73,0,0,0.17
+8,Central Puget Sound,Central Puget Sound,0.27,0.89,0.79,0.89
+14,Coos Bay,Coos Bay,0.36,0.39,0.46,0.44
+5,"Discovery, Sequim Bays","Discovery Bay, Sequim Bay",0.27,0.78,0.83,0.94
+40,El Coyote,El Coyote,0.23,0,0.5,0.44
+22,Elkhorn Slough,Elkhorn Slough,1,0.67,0,0
+35,Estero de Punta Banda,Estero de Punta Banda,0.32,0,0.5,0.44
+9,Hood Canal,Hood Canal,0,0.56,0.71,0.83
+15,Humboldt Bay,Humboldt Bay,0.5,0,0.5,0.44
+38,La Bocana,La Bocana,0.23,0,0.42,0.33
+36,Laguna Manuela,Laguna Manuela,0.23,0,0.5,0.44
+26,Long Beach Harbor,Long Beach Harbor- Terminal Island Area,0.27,0,0,0
+32,Mission Bay,Mission Bay,0,0,0,0
+23,Morro Bay,Morro Bay,0.82,0,0.42,0.44
+25,Mugu Lagoon,Mugu Lagoon,0.55,0.22,0,0
+12,Netarts Bay,Netarts Bay,1,0.67,0.67,0.78
+29,Newport Bay,Newport Bay,0.09,0.44,0,0
+1,North Juan de Fuca Basin,"North Juan de Fuca Basin: Gorge Waterway, Sooke/Victoria, Ayum Creek",0.09,0.28,0,0
+3,Northern Puget Sound,"Northern Puget Sound:  Samish Bay, Bellingham Bay, Lummi Bay, Drayton Harbor, Fidalgo Bay, Padilla Bay",0.64,0.89,0.75,0.78
+37,Ojo de Liebre,Ojo de Liebre/Guerrero Negro System,0.23,0,0.5,0.44
+33,San Diego Bay,San Diego Bay,0.09,0.33,0,0
+7,San Juan Islands,San Juan Islands,0.36,0.44,0.71,0.78
+28,Santa Ana River,Santa Ana River,0.27,0.33,0.21,0.17
+19,SF Bay Central Bay South ,SF Bay South Bay (South of Dumbarton Bridge),0.18,0.44,0,0
+18,SF Bay Central North,SF Bay Central Bay North (~Richmond Bridge to Alameda/South SF),0.09,0.56,0,0
+17,SF Bay North/San Pablo Bay,SF Bay North Bay/San Pablo Bay (north of Richmond Bridge),0.27,0.56,0,0
+21,SF Bay Richardson,"SF Bay Richardson Bay, excluding Sausalito",0.59,0.44,0,0
+20,SF Bay South,SF Bay Central Bay South  (south of Alameda/South SF to Dumbarton Bridge),0.18,0.44,0,0
+10,South Puget Sound,South Puget Sound,0.09,0.67,0.79,0.89
+34,Tijuana Estuary,Tijuana Estuary,0.18,0,0,0
+16,Tomales Bay,Tomales Bay,0.5,0.56,0.75,0.83
+2,West Strait of Georgia,West Strait of Georgia: Vancouver Island portion of Victoria area,0.45,0.06,0,0.28
+4,Whidbey Basin,Whidbey Basin (Similk Bay and Skagit Bay),0.77,0.67,0,0.83
+11,Willapa Bay,Willapa Bay,0.09,0.22,0.63,0.56
+13,Yaquina Bay,Yaquina Bay,0.36,0.44,0.5,0.44
